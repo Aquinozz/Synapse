@@ -1,0 +1,6 @@
+{
+  "name": "Synapse - Saúde Mental & Gestão de Resiliência",
+  "description": "Plataforma de saúde mental corporativa e resiliência cognitiva com avaliação de burnout, teleconsultas seguras e métricas analíticas anônimas LGPD.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
