@@ -13,10 +13,17 @@ export const forbidden = (message = 'Você não tem acesso a este recurso.') => 
 export const notFound = (message = 'Não encontrado.') => new HttpError(404, 'not_found', message);
 export const conflict = (message, code = 'conflict') => new HttpError(409, code, message);
 
+// Body larger than the JSON limit
+const isTooLarge = (err) => err?.type === 'entity.too.large';
+
 // eslint-disable-next-line no-unused-vars -- Express identifies error handlers by their four arguments
 export const errorHandler = (err, req, res, next) => {
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: { code: err.code, message: err.message } });
+    return;
+  }
+  if (isTooLarge(err)) {
+    res.status(413).json({ error: { code: 'too_large', message: 'O conteúdo enviado é grande demais.' } });
     return;
   }
   // Malformed JSON body

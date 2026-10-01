@@ -1,8 +1,10 @@
 import express from 'express';
 import { createLoginLimiter, requireAuth, requireRole } from './auth.js';
+import { CATALOG } from './catalog.js';
 import { DEMO_LOGIN_ENABLED, PRICING } from './config.js';
 import { errorHandler, notFound } from './errors.js';
 import { authRoutes } from './routes/auth.js';
+import { checkinRoutes } from './routes/checkin.js';
 import { planRoutes } from './routes/plan.js';
 import { psiRoutes } from './routes/psi.js';
 import { psychologistRoutes } from './routes/psychologists.js';
@@ -18,7 +20,8 @@ export const createApp = (db, { now = zonedNow, demoLogin = DEMO_LOGIN_ENABLED }
   app.disable('x-powered-by');
   // Behind Vercel's proxy the client address comes in X-Forwarded-For
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '100kb' }));
+  // Room for a profile photo, which arrives as a small cropped image inside the JSON
+  app.use(express.json({ limit: '300kb' }));
 
   const auth = requireAuth(db);
   const deps = { db, now, demoLogin, requireAuth: auth, loginLimiter: createLoginLimiter(db) };
@@ -26,9 +29,11 @@ export const createApp = (db, { now = zonedNow, demoLogin = DEMO_LOGIN_ENABLED }
   const api = express.Router();
   api.get('/health', (req, res) => res.json({ status: 'ok' }));
   api.get('/pricing', (req, res) => res.json({ pricing: PRICING }));
+  api.get('/catalog', (req, res) => res.json({ catalog: CATALOG }));
   api.use('/auth', authRoutes(deps));
   api.use('/psychologists', auth, psychologistRoutes(deps));
   api.use('/plan', auth, requireRole('employee'), planRoutes(deps));
+  api.use('/checkin', auth, requireRole('employee'), checkinRoutes(deps));
   api.use('/psi', auth, requireRole('psychologist'), psiRoutes(deps));
   api.use(() => {
     throw notFound('Rota não encontrada.');

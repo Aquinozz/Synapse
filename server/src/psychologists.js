@@ -16,19 +16,17 @@ export const groupByWeekday = (slots) => {
 export const getPublicProfile = async (q, psychologistId, viewerId = null, { includePending = false } = {}) => {
   const [row] = await q.query(
     `SELECT p.user_id AS id, u.name, p.title, p.reg, p.bio, p.avatar_url AS avatar, p.badge,
-            p.rating, p.review_count AS "reviewCount", p.status
-       FROM psychologists p JOIN users u ON u.id = p.user_id
+            COALESCE(ROUND(r.average, 1), 0)::float8 AS rating, COALESCE(r.count, 0)::int AS "reviewCount",
+            p.status, p.specialties, p.approaches, p.languages
+       FROM psychologists p
+       JOIN users u ON u.id = p.user_id
+       LEFT JOIN (SELECT psychologist_id, AVG(rating) AS average, COUNT(*) AS count FROM reviews GROUP BY psychologist_id) r
+         ON r.psychologist_id = p.user_id
       WHERE p.user_id = $1`,
     [psychologistId]
   );
   if (!row || (row.status !== 'active' && !includePending)) return null;
   const { status, ...profile } = row;
-
-  const tags = (
-    await q.query('SELECT label, icon, category FROM psychologist_tags WHERE psychologist_id = $1 ORDER BY id', [
-      psychologistId,
-    ])
-  ).map(({ label, icon, category }) => ({ label, icon, ...(category && { category }) }));
 
   const freeSlots = await q.query(
     `SELECT a.weekday, a.time
@@ -44,7 +42,6 @@ export const getPublicProfile = async (q, psychologistId, viewerId = null, { inc
     ...profile,
     // Only the owner needs to know the review status
     ...(includePending && { status }),
-    tags,
     weeklyAvailability: groupByWeekday(freeSlots),
   };
 };
@@ -55,11 +52,12 @@ export const listPublicProfiles = async (q, viewerId, search = '') => {
     `SELECT p.user_id AS id
        FROM psychologists p
        JOIN users u ON u.id = p.user_id
+       LEFT JOIN (SELECT psychologist_id, AVG(rating) AS average FROM reviews GROUP BY psychologist_id) r
+         ON r.psychologist_id = p.user_id
       WHERE p.status = 'active'
         AND (lower(u.name) LIKE $1 OR lower(p.title) LIKE $1 OR lower(p.bio) LIKE $1
-             OR EXISTS (SELECT 1 FROM psychologist_tags t
-                         WHERE t.psychologist_id = p.user_id AND lower(t.label) LIKE $1))
-      ORDER BY p.rating DESC, u.name`,
+             OR lower(array_to_string(p.specialties || p.approaches, ' ')) LIKE $1)
+      ORDER BY r.average DESC NULLS LAST, u.name`,
     [term]
   );
   const profiles = [];

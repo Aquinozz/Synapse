@@ -25,6 +25,15 @@ CREATE TABLE IF NOT EXISTS users (
   CHECK ((role = 'employee') = (company_id IS NOT NULL))
 );
 
+-- Acceptance of the terms (LGPD): which version was accepted and when. Employees also give
+-- a separate, explicit consent to the processing of health data (LGPD art. 11, I).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS health_consent_at TIMESTAMPTZ;
+
+-- Profile photo of an employee, already cropped and reduced by the app, as a data URL
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
+
 CREATE TABLE IF NOT EXISTS auth_tokens (
   -- SHA-256 of the bearer token, so a leaked database does not leak sessions
   token_hash TEXT PRIMARY KEY,
@@ -47,6 +56,7 @@ CREATE TABLE IF NOT EXISTS psychologists (
   bio          TEXT NOT NULL DEFAULT '',
   avatar_url   TEXT,
   badge        TEXT,
+  -- No longer read: the rating and the number of reviews come from the reviews table
   rating       REAL NOT NULL DEFAULT 0,
   review_count INTEGER NOT NULL DEFAULT 0,
   -- Only 'active' profiles (registration checked) are shown to employees
@@ -61,6 +71,18 @@ CREATE TABLE IF NOT EXISTS psychologist_tags (
   category        TEXT,
   UNIQUE (psychologist_id, label)
 );
+
+-- What the profile lists and the directory filters by (the options are in src/catalog.js).
+-- psychologist_tags is the older, free-form version of specialties and is no longer written.
+ALTER TABLE psychologists ADD COLUMN IF NOT EXISTS specialties TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE psychologists ADD COLUMN IF NOT EXISTS approaches TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE psychologists ADD COLUMN IF NOT EXISTS languages TEXT[] NOT NULL DEFAULT '{}';
+
+-- Profiles saved before these columns existed keep their specialties
+UPDATE psychologists p
+   SET specialties = (SELECT array_agg(t.label ORDER BY t.id) FROM psychologist_tags t WHERE t.psychologist_id = p.user_id)
+ WHERE cardinality(p.specialties) = 0
+   AND EXISTS (SELECT 1 FROM psychologist_tags t WHERE t.psychologist_id = p.user_id);
 
 -- Weekly slots a psychologist offers. weekday follows JavaScript's Date.getDay(): 0 = Sunday
 CREATE TABLE IF NOT EXISTS availability (
@@ -93,6 +115,43 @@ CREATE TABLE IF NOT EXISTS reschedules (
   starts_at       TEXT NOT NULL,
   PRIMARY KEY (employee_id, week_start),
   UNIQUE (psychologist_id, starts_at)
+);
+
+-- Wellness index of the employee's daily check-in, one per day (YYYY-MM-DD, wall-clock text).
+-- A very low index is an alert for the employee's psychologist until marked as seen.
+CREATE TABLE IF NOT EXISTS checkins (
+  employee_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day           TEXT NOT NULL,
+  score         INTEGER NOT NULL CHECK (score BETWEEN 0 AND 100),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  alert_seen_at TIMESTAMPTZ,
+  PRIMARY KEY (employee_id, day)
+);
+
+-- What employees say about a psychologist. Shown without the author's name. One review per
+-- employee per psychologist; the demo samples have no author.
+CREATE TABLE IF NOT EXISTS reviews (
+  id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  psychologist_id INTEGER NOT NULL REFERENCES psychologists(user_id) ON DELETE CASCADE,
+  employee_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  rating          INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment         TEXT NOT NULL DEFAULT '',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (psychologist_id, employee_id)
+);
+
+-- The score a psychologist gives to each session with a patient, to follow the patient's
+-- progress over time. Health data: only that psychologist ever reads it.
+CREATE TABLE IF NOT EXISTS session_evaluations (
+  psychologist_id INTEGER NOT NULL REFERENCES psychologists(user_id) ON DELETE CASCADE,
+  employee_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- Day of the session, YYYY-MM-DD (wall-clock text, like the other dates)
+  session_date    TEXT NOT NULL,
+  score           INTEGER NOT NULL CHECK (score BETWEEN 1 AND 10),
+  comment         TEXT NOT NULL DEFAULT '',
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (psychologist_id, employee_id, session_date)
 );
 `;
 

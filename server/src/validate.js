@@ -1,3 +1,4 @@
+import { AVATAR_MAX_LENGTH } from './config.js';
 import { badRequest } from './errors.js';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,6 +40,19 @@ export const weekday = (value) => {
 /** "HH:MM" in 24h */
 export const time = (value) => {
   if (typeof value !== 'string' || !TIME.test(value)) throw badRequest('Horário inválido. Use o formato HH:MM.');
+  return value;
+};
+
+// Only raster images inlined as base64: no SVG (it can carry scripts) and no remote URLs
+const AVATAR_FORMAT = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+/** A profile photo already cropped by the app, as a data URL, or null to remove it */
+export const avatar = (value) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string' || !AVATAR_FORMAT.test(value)) {
+    throw badRequest('Envie a foto como imagem JPEG, PNG ou WebP.', 'invalid_image');
+  }
+  if (value.length > AVATAR_MAX_LENGTH) throw badRequest('A foto é grande demais.', 'image_too_large');
   return value;
 };
 
