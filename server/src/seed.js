@@ -62,36 +62,52 @@ const PSYCHOLOGISTS = [
   },
 ];
 
-const EMPLOYEE = { email: 'marina@synapse.demo', name: 'Marina Silva' };
+// Demo employees. Marina already has her weekly session; Rafael has not chosen a
+// psychologist yet, which shows the first-access flow.
+const EMPLOYEES = [
+  {
+    email: 'marina@synapse.demo',
+    name: 'Marina Silva',
+    plan: { psychologist: 'camila@synapse.demo', weekday: 3, time: '16:30', format: 'video' },
+  },
+  { email: 'rafael@synapse.demo', name: 'Rafael Nogueira', plan: null },
+];
 
 /**
- * Creates the demo company, three active psychologists and one employee who already
- * sees Dra. Camila every Wednesday at 16:30. Does nothing if the data is already there.
- * Resolves to true when it inserted data.
+ * Creates the demo data: one company, three active psychologists and two employees.
+ * Safe to run again: accounts that already exist are left untouched, missing ones are added.
+ * Resolves to true when it inserted anything.
  */
 export const seed = async (db, { password, companyCode }) => {
   const passwordHash = await hashPassword(password);
 
   return db.transaction(async (q) => {
-    if ((await q.query('SELECT 1 FROM companies WHERE access_code = $1', [companyCode])).length > 0) return false;
+    let inserted = false;
+
+    const userId = async (email) => (await q.query('SELECT id FROM users WHERE email = $1', [email]))[0]?.id;
 
     const insertUser = async (role, name, email, companyId) => {
       const [{ id }] = await q.query(
         'INSERT INTO users (role, name, email, password_hash, company_id) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [role, name, email, passwordHash, companyId]
       );
+      inserted = true;
       return id;
     };
 
-    const [{ id: companyId }] = await q.query(
-      'INSERT INTO companies (name, access_code) VALUES ($1, $2) RETURNING id',
-      ['Empresa Demo', companyCode]
-    );
+    let [company] = await q.query('SELECT id FROM companies WHERE access_code = $1', [companyCode]);
+    if (!company) {
+      [company] = await q.query('INSERT INTO companies (name, access_code) VALUES ($1, $2) RETURNING id', [
+        'Empresa Demo',
+        companyCode,
+      ]);
+      inserted = true;
+    }
 
-    const ids = {};
     for (const p of PSYCHOLOGISTS) {
+      if (await userId(p.email)) continue;
+
       const id = await insertUser('psychologist', p.name, p.email, null);
-      ids[p.email] = id;
       await q.query(
         `INSERT INTO psychologists (user_id, title, reg, bio, avatar_url, badge, rating, review_count, status)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active')`,
@@ -115,14 +131,20 @@ export const seed = async (db, { password, companyCode }) => {
       }
     }
 
-    const employeeId = await insertUser('employee', EMPLOYEE.name, EMPLOYEE.email, companyId);
-    await q.query(
-      'INSERT INTO weekly_plans (employee_id, psychologist_id, weekday, time, format) VALUES ($1, $2, $3, $4, $5)',
-      [employeeId, ids['camila@synapse.demo'], 3, '16:30', 'video']
-    );
+    for (const e of EMPLOYEES) {
+      if (await userId(e.email)) continue;
 
-    return true;
+      const id = await insertUser('employee', e.name, e.email, company.id);
+      if (e.plan) {
+        await q.query(
+          'INSERT INTO weekly_plans (employee_id, psychologist_id, weekday, time, format) VALUES ($1, $2, $3, $4, $5)',
+          [id, await userId(e.plan.psychologist), e.plan.weekday, e.plan.time, e.plan.format]
+        );
+      }
+    }
+
+    return inserted;
   });
 };
 
-export const SEED_ACCOUNTS = [EMPLOYEE.email, ...PSYCHOLOGISTS.map((p) => p.email)];
+export const SEED_ACCOUNTS = [...EMPLOYEES.map((e) => e.email), ...PSYCHOLOGISTS.map((p) => p.email)];

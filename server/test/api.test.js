@@ -115,6 +115,16 @@ describe('auth', () => {
   });
 });
 
+describe('demo data', () => {
+  test('seeding again adds nothing, and the second demo employee starts without a psychologist', async () => {
+    assert.equal(await seed(db, SEED), false);
+
+    const token = await login('rafael@synapse.demo');
+    const { data } = await api('GET', '/plan', { token });
+    assert.equal(data.plan, null);
+  });
+});
+
 describe('psychologist directory', () => {
   test('requires login', async () => {
     assert.equal((await api('GET', '/psychologists')).status, 401);
