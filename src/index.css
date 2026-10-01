@@ -4,6 +4,30 @@
   --font-headline: "Sora", sans-serif;
   --font-body: "Outfit", sans-serif;
 
+  --breakpoint-xs: 24rem;
+
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-pop-in: pop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-sheet-in: sheet-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-screen-in: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-toast-in: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.96); }
+  }
+  @keyframes sheet-in {
+    from { opacity: 0; transform: translateY(24px); }
+  }
+  @keyframes screen-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(-8px); }
+  }
+
   --color-surface: #f8f9ff;
   --color-surface-dim: #cbdbf5;
   --color-surface-bright: #f8f9ff;
@@ -65,6 +89,22 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-headline);
+  }
+
+  button:not(:disabled),
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Text inputs draw their own focus ring */
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
   }
 }
 
@@ -131,4 +171,56 @@
   user-select: none;
   pointer-events: none;
   transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Horizontal chip rows scroll without showing a scrollbar */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Printing: only the element marked .print-area (the executive report) goes to paper */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Page container shared by every tab: phone column, tablet column, wide desktop canvas */
+.screen {
+  @apply flex flex-col w-full mx-auto max-w-md md:max-w-2xl lg:max-w-6xl px-4 lg:px-8 pt-20 lg:pt-24 pb-28 lg:pb-12 gap-4 lg:gap-6;
+}
+
+/* White content card used across screens */
+.card {
+  @apply bg-white rounded-3xl p-5 border border-[#e5eeff] shadow-[0_1px_3px_rgba(11,28,48,0.04)];
 }

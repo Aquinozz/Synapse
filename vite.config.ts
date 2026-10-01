@@ -12,6 +12,11 @@ export default defineConfig(() => {
       },
     },
     server: {
+      // The API (server/) runs on its own port; the front end calls it as /api.
+      // Set API_TARGET to point at an API running elsewhere.
+      proxy: {
+        '/api': process.env.API_TARGET || 'http://localhost:4000',
+      },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
