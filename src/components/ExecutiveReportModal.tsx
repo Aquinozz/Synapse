@@ -1,5 +1,6 @@
 import React from 'react';
 import { ManagementKPIs } from '../types';
+import { Modal, ModalCloseButton } from './Modal';
 
 interface ExecutiveReportModalProps {
   isOpen: boolean;
@@ -14,18 +15,22 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
   kpis,
   departmentName,
 }) => {
-  if (!isOpen) return null;
-
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0b1c30]/75 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-[#ffffff] w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col relative max-h-[92vh] overflow-y-auto border border-white">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      label="Relatório executivo"
+      maxWidth="max-w-2xl"
+      className="print-area sm:!p-8"
+      dimmed
+    >
         {/* Actions header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#eff4ff]">
-          <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between gap-3 pb-4 border-b border-[#eff4ff]">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="material-symbols-outlined text-[24px] text-[#6b38d4]">
               picture_as_pdf
             </span>
@@ -34,30 +39,16 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 Relatório Executivo Auditado
               </span>
               <h3 className="font-sora text-lg font-bold text-[#0b1c30]">
-                Resiliência & Saúde Psicossocial 2026
+                Resiliência & Saúde Psicossocial {new Date().getFullYear()}
               </h3>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              className="px-3.5 py-1.5 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-xs font-semibold text-[#0051d5] flex items-center gap-1.5 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[16px]">print</span>
-              <span>Imprimir / Salvar PDF</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#eff4ff] flex items-center justify-center text-[#494454] hover:text-[#0b1c30]"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span>
-            </button>
-          </div>
+          <ModalCloseButton onClose={onClose} className="no-print" />
         </div>
 
         {/* Report Content */}
         <div className="my-4 space-y-4 text-xs font-outfit text-[#494454]">
-          <div className="p-4 rounded-2xl bg-[#eff4ff] flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-[#eff4ff] flex items-center justify-between gap-3 flex-wrap">
             <div>
               <div className="text-[11px] text-[#494454] uppercase tracking-wider font-semibold">
                 Escopo Selecionado
@@ -69,12 +60,12 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 {kpis.totalEmployees} colaboradores protegidos · Base anonimizada
               </div>
             </div>
-            <div className="text-right">
-              <span className="px-2.5 py-1 rounded-full bg-[#6ffbbe]/40 text-[#002113] font-bold text-[10px] uppercase">
+            <div className="sm:text-right">
+              <span className="inline-block px-2.5 py-1 rounded-full bg-[#6ffbbe]/40 text-[#002113] font-bold text-[10px] uppercase">
                 Certificação ESG / CIPA
               </span>
               <div className="text-[10px] text-[#494454] mt-1">
-                Data de emissão: 30/09/2026
+                Data de emissão: {new Date().toLocaleDateString('pt-BR')}
               </div>
             </div>
           </div>
@@ -86,7 +77,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               <div className="font-sora text-2xl font-bold text-[#0b1c30] mt-1">
                 {kpis.wellnessIndex}/100
               </div>
-              <span className="text-[#00855b] font-semibold text-[11px]">{kpis.wellnessDelta}</span>
+              <span className={`font-semibold text-[11px] ${kpis.wellnessDelta.startsWith('-') ? 'text-[#ba1a1a]' : 'text-[#00855b]'}`}>{kpis.wellnessDelta}</span>
             </div>
             <div className="p-3 bg-[#f8f9ff] rounded-2xl border border-[#e5eeff]">
               <span className="text-[10px] uppercase font-bold text-[#494454]">Adesão aos Cuidados</span>
@@ -100,7 +91,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               <div className="font-sora text-2xl font-bold text-[#6b38d4] mt-1">
                 {kpis.burnoutRiskPct}%
               </div>
-              <span className="text-[#00855b] font-semibold text-[11px]">{kpis.burnoutDelta}</span>
+              <span className={`font-semibold text-[11px] ${kpis.burnoutDelta.startsWith('+') ? 'text-[#ba1a1a]' : 'text-[#00855b]'}`}>{kpis.burnoutDelta}</span>
             </div>
             <div className="p-3 bg-[#f8f9ff] rounded-2xl border border-[#e5eeff]">
               <span className="text-[10px] uppercase font-bold text-[#494454]">Retorno Financeiro</span>
@@ -139,7 +130,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           </div>
 
           {/* Signatures */}
-          <div className="pt-4 border-t border-[#eff4ff] flex items-center justify-between text-[11px] text-[#494454]">
+          <div className="pt-4 border-t border-[#eff4ff] flex items-center justify-between gap-3 flex-wrap text-[11px] text-[#494454]">
             <div>
               <span className="font-bold text-[#0b1c30]">Auditoria de Riscos Psicossociais</span>
               <div>Conselho Consultivo Synapse & Especialistas CRP/CRM</div>
@@ -151,14 +142,22 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           </div>
         </div>
 
-        {/* Footer close */}
-        <button
-          onClick={onClose}
-          className="w-full h-11 mt-2 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-bold transition-all shadow-sm"
-        >
-          Fechar Relatório
-        </button>
-      </div>
-    </div>
+        {/* Footer actions */}
+        <div className="no-print flex flex-col-reverse sm:flex-row gap-2 mt-2 shrink-0">
+          <button
+            onClick={onClose}
+            className="h-11 px-6 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#0b1c30] font-outfit text-sm font-semibold transition-colors"
+          >
+            Fechar
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex-1 h-11 min-h-11 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">print</span>
+            <span>Imprimir / Salvar PDF</span>
+          </button>
+        </div>
+    </Modal>
   );
 };

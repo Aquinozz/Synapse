@@ -1,21 +1,19 @@
-export type ActiveTab = 'inicio' | 'bem-estar' | 'especialistas' | 'synapse-ai' | 'gestao';
-
 export interface Therapist {
-  id: string;
+  id: number;
   name: string;
   title: string;
   reg: string; // CRP or CRM
-  avatar: string;
+  /** Photo URL; professionals without one are shown by their initials */
+  avatar: string | null;
   rating: number;
   reviewCount: number;
-  badge?: string;
+  badge?: string | null;
   bio: string;
   tags: { label: string; icon: string; category?: 'burnout' | 'tcc' | 'sleep' | 'medical' }[];
-  slots: string[];
-  nextSlotLabel: string;
-  nextSlotTime: string;
-  isAvailableNow?: boolean;
-  corporateCovered: boolean;
+  /** Recurring weekly slots the therapist offers. weekday follows Date.getDay() (0 = domingo) */
+  weeklyAvailability: { weekday: number; times: string[] }[];
+  /** Psychologists only see this on their own profile: 'pending' until the registration is checked */
+  status?: 'pending' | 'active';
 }
 
 export type CognitiveLoadLevel = 'calm' | 'balanced' | 'tired' | 'exhausted';
@@ -58,4 +56,16 @@ export interface ManagementKPIs {
   monthlySessions: number;
   savingsRoi: string;
   leaveReductionPct: number;
+}
+
+export type SessionFormat = 'video' | 'audio';
+
+/** The employee's weekly session: a fixed therapist and slot, plus an optional one-off change */
+export interface WeeklyPlan {
+  therapistId: number;
+  weekday: number;
+  time: string;
+  format: SessionFormat;
+  /** Local date-time (YYYY-MM-DDTHH:MM) of a session moved for a single week */
+  rescheduledTo?: string;
 }

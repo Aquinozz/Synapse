@@ -1,67 +1,12 @@
-import { IMAGES } from '../constants/images';
-import { Therapist, TeamResilience, ManagementKPIs } from '../types';
+import { TeamResilience, ManagementKPIs, DepartmentScope } from '../types';
 
-export const INITIAL_THERAPISTS: Therapist[] = [
-  {
-    id: 'camila',
-    name: 'Dra. Camila Rossi',
-    title: 'Psicóloga Clínica & Especialista em Burnout',
-    reg: 'CRP 06/142981',
-    avatar: IMAGES.camila,
-    rating: 4.9,
-    reviewCount: 128,
-    badge: 'Mais recomendada pelo time de tecnologia',
-    bio: 'Foco em alta performance sustentável, transição de liderança e alívio do esgotamento emocional.',
-    tags: [
-      { label: 'Burnout Corporativo', icon: 'local_fire_department', category: 'burnout' },
-      { label: 'Síndrome do Impostor', icon: 'visibility_off' },
-      { label: 'TCC Baseada em Evidências', icon: 'cognition', category: 'tcc' },
-    ],
-    slots: ['Hoje, 16:30', 'Amanhã, 10:00', 'Amanhã, 15:30'],
-    nextSlotLabel: 'Hoje, 16:30',
-    nextSlotTime: 'Hoje, 16:30',
-    isAvailableNow: true,
-    corporateCovered: true,
-  },
-  {
-    id: 'lucas',
-    name: 'Dr. Lucas Mendonça',
-    title: 'Psicólogo Clínico & Mindfulness',
-    reg: 'CRP 05/88921',
-    avatar: IMAGES.lucas,
-    rating: 4.8,
-    reviewCount: 94,
-    bio: 'Especialista em regulação do sono, técnicas somáticas de descompressão e estresse corporativo.',
-    tags: [
-      { label: 'Insônia & Ritmo Circadiano', icon: 'bedtime', category: 'sleep' },
-      { label: 'Mindfulness Redutor de Cortisol', icon: 'spa' },
-    ],
-    slots: ['Quinta, 14:00', 'Sexta, 11:30', 'Segunda, 09:00'],
-    nextSlotLabel: 'Próxima: Quinta, 14:00',
-    nextSlotTime: 'Quinta, 14:00',
-    isAvailableNow: true,
-    corporateCovered: true,
-  },
-  {
-    id: 'beatriz',
-    name: 'Dra. Beatriz Alencar',
-    title: 'Médica Psiquiatra da Infância e Adulto',
-    reg: 'CRM 08/23419',
-    avatar: IMAGES.beatriz,
-    rating: 5.0,
-    reviewCount: 62,
-    bio: 'Avaliação psiquiátrica integrada, saúde mental ocupacional e medicina preventiva do estilo de vida.',
-    tags: [
-      { label: 'Avaliação Médica & TDAH', icon: 'stethoscope', category: 'medical' },
-      { label: 'Saúde Mental no Trabalho', icon: 'work_history' },
-    ],
-    slots: ['Sexta, 09:30', 'Segunda, 16:00', 'Terça, 14:00'],
-    nextSlotLabel: 'Próxima: Sexta, 09:30',
-    nextSlotTime: 'Sexta, 09:30',
-    isAvailableNow: false,
-    corporateCovered: true,
-  },
-];
+export const DEPARTMENT_NAMES: Record<DepartmentScope, string> = {
+  all: 'Toda a Empresa',
+  engineering: 'Engenharia & Tech',
+  sales: 'Vendas & Comercial',
+  marketing: 'Marketing & Criação',
+  operations: 'Operações & CS',
+};
 
 export const TEAMS_DATA: Record<string, TeamResilience[]> = {
   all: [
