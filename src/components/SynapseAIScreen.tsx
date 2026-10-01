@@ -121,7 +121,7 @@ export const SynapseAIScreen: React.FC<SynapseAIScreenProps> = ({
             <div className="absolute -right-12 -bottom-16 w-56 h-56 bg-white/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative flex items-center gap-4">
               <span className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[30px]">neurology</span>
+                <span className="material-symbols-outlined text-[2.125rem]">neurology</span>
               </span>
               <div className="min-w-0">
                 <span className="font-outfit text-xs font-semibold uppercase tracking-wider text-[#dbe1ff]">
@@ -152,7 +152,7 @@ export const SynapseAIScreen: React.FC<SynapseAIScreenProps> = ({
                       idx === 0 ? 'bg-[#6b38d4] text-white' : 'bg-[#eff4ff] text-[#6b38d4]'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[22px]">{rec.icon}</span>
+                    <span className="material-symbols-outlined text-[1.5rem]">{rec.icon}</span>
                   </span>
                   <div className="flex flex-col min-w-0 flex-1 basis-48">
                     <span className="font-sora text-sm font-bold text-[#0b1c30]">{rec.title}</span>
@@ -182,7 +182,7 @@ export const SynapseAIScreen: React.FC<SynapseAIScreenProps> = ({
               {WEEK_PATTERNS.map((pattern) => (
                 <li key={pattern.title} className="flex items-start gap-3">
                   <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${pattern.tone}`}>
-                    <span className="material-symbols-outlined text-[20px]">{pattern.icon}</span>
+                    <span className="material-symbols-outlined text-[1.375rem]">{pattern.icon}</span>
                   </span>
                   <div className="flex flex-col min-w-0">
                     <span className="font-outfit text-sm font-semibold text-[#0b1c30]">{pattern.title}</span>
@@ -195,7 +195,7 @@ export const SynapseAIScreen: React.FC<SynapseAIScreenProps> = ({
 
           {/* Transparência */}
           <section className="rounded-3xl p-4 bg-[#eff4ff] border border-[#dce9ff] flex items-start gap-3">
-            <span className="material-symbols-outlined text-[20px] text-[#0051d5] fill-1 shrink-0">verified_user</span>
+            <span className="material-symbols-outlined text-[1.375rem] text-[#0051d5] fill-1 shrink-0">verified_user</span>
             <p className="font-outfit text-sm text-[#494454] leading-snug">
               <strong className="text-[#003ea8] font-semibold">Como isso funciona:</strong> as sugestões usam apenas os seus check-ins e ficam visíveis só para você. Elas não substituem a orientação de um profissional.
             </p>

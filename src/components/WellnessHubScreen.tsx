@@ -190,16 +190,16 @@ export const WellnessHubScreen: React.FC<WellnessHubScreenProps> = ({
               >
                 <div className="flex items-start justify-between gap-2 w-full">
                   <span className="w-10 h-10 rounded-full bg-[#eff4ff] group-hover:bg-[#e9ddff] text-[#6b38d4] flex items-center justify-center shrink-0 transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">{practice.icon}</span>
+                    <span className="material-symbols-outlined text-[1.375rem]">{practice.icon}</span>
                   </span>
                   <span className="flex items-center gap-1.5">
                     {isDone && (
-                      <span className="flex items-center gap-0.5 font-outfit text-[11px] font-semibold text-[#006947]">
-                        <span className="material-symbols-outlined text-[16px] fill-1">check_circle</span>
+                      <span className="flex items-center gap-0.5 font-outfit text-2xs font-semibold text-[#006947]">
+                        <span className="material-symbols-outlined text-[1.125rem] fill-1">check_circle</span>
                         Feito
                       </span>
                     )}
-                    <span className="px-2 py-0.5 rounded-full bg-[#eff4ff] text-[#494454] font-outfit text-[11px] font-semibold">
+                    <span className="px-2 py-0.5 rounded-full bg-[#eff4ff] text-[#494454] font-outfit text-2xs font-semibold">
                       {practice.duration}
                     </span>
                   </span>
@@ -221,7 +221,7 @@ export const WellnessHubScreen: React.FC<WellnessHubScreenProps> = ({
                   ) : (
                     <>
                       <span>{isDone ? 'Praticar de novo' : 'Praticar agora'}</span>
-                      <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
+                      <span className="material-symbols-outlined text-[1.25rem] group-hover:translate-x-1 transition-transform">
                         arrow_forward
                       </span>
                     </>
@@ -237,7 +237,7 @@ export const WellnessHubScreen: React.FC<WellnessHubScreenProps> = ({
       <section className="card">
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-[#6b38d4]">graphic_eq</span>
+            <span className="material-symbols-outlined text-[1.375rem] text-[#6b38d4]">graphic_eq</span>
             <h2 className="font-sora text-base lg:text-lg font-bold text-[#0b1c30]">Sons para focar</h2>
           </div>
           {activeSoundscape && (
@@ -268,7 +268,7 @@ export const WellnessHubScreen: React.FC<WellnessHubScreenProps> = ({
                       isPlaying ? 'bg-[#6b38d4] text-white' : 'bg-white text-[#494454]'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
+                    <span className="material-symbols-outlined text-[1.375rem]">{s.icon}</span>
                   </span>
                   <span className="flex flex-col min-w-0">
                     <span className="font-sora text-sm font-bold text-[#0b1c30] truncate">{s.name}</span>
@@ -276,7 +276,7 @@ export const WellnessHubScreen: React.FC<WellnessHubScreenProps> = ({
                   </span>
                 </span>
                 <span
-                  className={`material-symbols-outlined text-[24px] shrink-0 ${
+                  className={`material-symbols-outlined text-[1.6875rem] shrink-0 ${
                     isPlaying ? 'text-[#6b38d4] fill-1' : 'text-[#7b7486]'
                   }`}
                 >
@@ -292,7 +292,7 @@ export const WellnessHubScreen: React.FC<WellnessHubScreenProps> = ({
       <section className="p-4 rounded-3xl bg-[#ffdad6]/60 border border-[#ffdad6] flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-full bg-[#ba1a1a] text-white flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[20px] fill-1">shield_with_heart</span>
+            <span className="material-symbols-outlined text-[1.375rem] fill-1">shield_with_heart</span>
           </div>
           <div className="min-w-0">
             <h2 className="font-sora text-sm font-bold text-[#ba1a1a]">

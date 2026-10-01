@@ -11,7 +11,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ error, onRetry }) 
   <div className="min-h-[60vh] flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center font-outfit bg-[#f8f9ff]">
     {error ? (
       <>
-        <span className="material-symbols-outlined text-[36px] text-[#ba1a1a]">error</span>
+        <span className="material-symbols-outlined text-[2.5rem] text-[#ba1a1a]">error</span>
         <p className="text-sm text-[#494454] max-w-xs" role="alert">
           {error}
         </p>
@@ -26,7 +26,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ error, onRetry }) 
       </>
     ) : (
       <>
-        <span className="material-symbols-outlined text-[32px] text-[#6b38d4] animate-spin">progress_activity</span>
+        <span className="material-symbols-outlined text-[2.25rem] text-[#6b38d4] animate-spin">progress_activity</span>
         <span className="sr-only" role="status">
           Carregando
         </span>

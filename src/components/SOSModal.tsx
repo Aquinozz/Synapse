@@ -58,10 +58,10 @@ const SOSContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div className="flex items-center justify-between pb-3 border-b border-[#eff4ff]">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-full bg-[#ffdad6] flex items-center justify-center text-[#ba1a1a]">
-            <span className="material-symbols-outlined text-[20px] fill-1">shield_with_heart</span>
+            <span className="material-symbols-outlined text-[1.375rem] fill-1">shield_with_heart</span>
           </div>
           <div>
-            <span className="font-outfit text-[11px] font-bold uppercase tracking-wider text-[#ba1a1a]">
+            <span className="font-outfit text-2xs font-bold uppercase tracking-wider text-[#ba1a1a]">
               Suporte Emergencial 24/7
             </span>
             <h3 className="font-sora text-lg font-bold text-[#0b1c30]">
@@ -73,8 +73,8 @@ const SOSContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
 
       {/* Notice of Total Anonymity */}
-      <div className="my-3 p-3 rounded-2xl bg-[#eff4ff] flex items-start gap-2 text-[12px] font-outfit text-[#494454]">
-        <span className="material-symbols-outlined text-[18px] text-[#0051d5] shrink-0">verified_user</span>
+      <div className="my-3 p-3 rounded-2xl bg-[#eff4ff] flex items-start gap-2 text-xs font-outfit text-[#494454]">
+        <span className="material-symbols-outlined text-[1.25rem] text-[#0051d5] shrink-0">verified_user</span>
         <p>
           <strong>Sigilo Ético Absoluto:</strong> O uso deste canal é estritamente confidencial. Nenhum dado ou notificação é gerado para a sua empresa ou liderança.
         </p>
@@ -102,8 +102,8 @@ const SOSContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             ))}
             {sentMessages.length > 0 && (
-              <span className="self-end text-[10px] text-[#7b7486] font-outfit flex items-center gap-0.5">
-                <span className="material-symbols-outlined text-[12px]">done_all</span>
+              <span className="self-end text-3xs text-[#7b7486] font-outfit flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-xs">done_all</span>
                 Enviada com criptografia
               </span>
             )}
@@ -130,7 +130,7 @@ const SOSContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               aria-label="Enviar mensagem"
               className="w-11 h-11 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white flex items-center justify-center shrink-0 shadow-sm transition-all active:scale-95 disabled:opacity-50"
             >
-              <span className="material-symbols-outlined text-[20px]">send</span>
+              <span className="material-symbols-outlined text-[1.375rem]">send</span>
             </button>
           </form>
         </div>
@@ -144,22 +144,22 @@ const SOSContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[22px]">support_agent</span>
+                <span className="material-symbols-outlined text-[1.5rem]">support_agent</span>
               </div>
               <div>
                 <div className="font-sora text-sm font-bold flex items-center gap-1.5 flex-wrap">
                   <span>{connectingChat ? 'Conectando com a plantonista...' : 'Falar com Plantonista Agora'}</span>
                   {!connectingChat && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-white/30 text-[10px] uppercase font-bold">Ao Vivo</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-white/30 text-3xs uppercase font-bold">Ao Vivo</span>
                   )}
                 </div>
-                <p className="text-[12px] opacity-90 font-outfit">
+                <p className="text-xs opacity-90 font-outfit">
                   Atendimento imediato via chat ou áudio com psicólogo credenciado.
                 </p>
               </div>
             </div>
             <span
-              className={`material-symbols-outlined text-[20px] shrink-0 ${
+              className={`material-symbols-outlined text-[1.375rem] shrink-0 ${
                 connectingChat ? 'animate-spin' : 'group-hover:translate-x-1 transition-transform'
               }`}
             >
@@ -174,25 +174,25 @@ const SOSContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-[#dbe1ff] flex items-center justify-center text-[#0051d5] shrink-0">
-                <span className="material-symbols-outlined text-[20px]">call</span>
+                <span className="material-symbols-outlined text-[1.375rem]">call</span>
               </div>
               <div>
                 <div className="font-sora text-sm font-bold">Ligue 188 · CVV Oficial</div>
-                <p className="text-[12px] text-[#494454] font-outfit">
+                <p className="text-xs text-[#494454] font-outfit">
                   Apoio emocional gratuito e nacional 24h por dia.
                 </p>
               </div>
             </div>
-            <span className="material-symbols-outlined text-[18px] text-[#494454]">open_in_new</span>
+            <span className="material-symbols-outlined text-[1.25rem] text-[#494454]">open_in_new</span>
           </a>
 
           {/* Somatic grounding 5-4-3-2-1 */}
           <div className="p-3.5 rounded-2xl bg-[#f5fff6] border border-[#6ffbbe]/40 text-[#002113]">
             <div className="flex items-center gap-1.5 font-bold font-sora text-xs text-[#006947] mb-1">
-              <span className="material-symbols-outlined text-[16px]">self_improvement</span>
+              <span className="material-symbols-outlined text-[1.125rem]">self_improvement</span>
               <span>Técnica Rápida 5-4-3-2-1 para Crises</span>
             </div>
-            <p className="text-[11px] leading-relaxed text-[#005236] font-outfit">
+            <p className="text-2xs leading-relaxed text-[#005236] font-outfit">
               Encontre ao seu redor: <strong>5</strong> coisas que você vê, <strong>4</strong> que pode tocar, <strong>3</strong> sons que ouve, <strong>2</strong> aromas e <strong>1</strong> respiração profunda e longa.
             </p>
           </div>

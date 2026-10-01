@@ -82,7 +82,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
             onClick={() => onOpenReportModal(selectedDept)}
             className="hidden lg:flex h-11 px-5 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold items-center gap-2 active:scale-[0.98] transition-all"
           >
-            <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+            <span className="material-symbols-outlined text-[1.375rem]">picture_as_pdf</span>
             <span>Exportar relatório</span>
           </button>
         </div>
@@ -102,12 +102,12 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               className="w-full h-11 flex items-center justify-between px-3 rounded-2xl bg-white text-[#0b1c30] border border-[#e5eeff] hover:border-[#6b38d4]/30 text-left text-sm font-outfit font-semibold active:bg-[#eff4ff] transition-colors"
             >
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="material-symbols-outlined text-[18px] text-[#6b38d4] shrink-0">
+                <span className="material-symbols-outlined text-[1.25rem] text-[#6b38d4] shrink-0">
                   groups
                 </span>
                 <span className="truncate">{deptLabel(selectedDept)}</span>
               </div>
-              <span className="material-symbols-outlined text-[18px] text-[#494454] shrink-0">
+              <span className="material-symbols-outlined text-[1.25rem] text-[#494454] shrink-0">
                 expand_more
               </span>
             </button>
@@ -131,7 +131,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
                     >
                       <span>{deptLabel(d)}</span>
                       {selectedDept === d && (
-                        <span className="material-symbols-outlined text-[16px]">check</span>
+                        <span className="material-symbols-outlined text-[1.125rem]">check</span>
                       )}
                     </button>
                   )
@@ -153,12 +153,12 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               className="w-full h-11 flex items-center justify-between px-3 rounded-2xl bg-white text-[#0b1c30] border border-[#e5eeff] hover:border-[#6b38d4]/30 text-left text-sm font-outfit font-semibold active:bg-[#eff4ff] transition-colors"
             >
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="material-symbols-outlined text-[18px] text-[#0051d5] shrink-0">
+                <span className="material-symbols-outlined text-[1.25rem] text-[#0051d5] shrink-0">
                   calendar_month
                 </span>
                 <span className="truncate">{PERIOD_NAMES[selectedPeriod]}</span>
               </div>
-              <span className="material-symbols-outlined text-[18px] text-[#494454] shrink-0">
+              <span className="material-symbols-outlined text-[1.25rem] text-[#494454] shrink-0">
                 expand_more
               </span>
             </button>
@@ -183,7 +183,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
                   >
                     <span>{name}</span>
                     {selectedPeriod === key && (
-                      <span className="material-symbols-outlined text-[16px]">check</span>
+                      <span className="material-symbols-outlined text-[1.125rem]">check</span>
                     )}
                   </button>
                 ))}
@@ -194,7 +194,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
 
         {/* Alerta Ético Explícito */}
         <div className="flex items-start gap-2 p-3 rounded-2xl bg-[#eff4ff] text-[#494454] border border-[#dce9ff]">
-          <span className="material-symbols-outlined text-[#0051d5] text-[18px] shrink-0 mt-0.5 fill-1">
+          <span className="material-symbols-outlined text-[#0051d5] text-[1.25rem] shrink-0 mt-0.5 fill-1">
             verified_user
           </span>
           <p className="font-outfit text-sm leading-snug">
@@ -210,7 +210,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         <div className="card !p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-outfit text-xs text-[#494454] font-medium">Bem-Estar Geral</span>
-            <span className="material-symbols-outlined text-[18px] text-[#00855b]">
+            <span className="material-symbols-outlined text-[1.25rem] text-[#00855b]">
               sentiment_satisfied
             </span>
           </div>
@@ -222,7 +222,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               <span className="font-outfit text-xs text-[#494454]">/100</span>
             </div>
             <div className="flex items-center gap-1 mt-0.5">
-              <span className={`material-symbols-outlined text-[16px] ${wellnessImproved ? 'text-[#00855b]' : 'text-[#ba1a1a]'}`}>
+              <span className={`material-symbols-outlined text-[1.125rem] ${wellnessImproved ? 'text-[#00855b]' : 'text-[#ba1a1a]'}`}>
                 {wellnessImproved ? 'trending_up' : 'trending_down'}
               </span>
               <span className={`font-outfit text-xs font-semibold ${wellnessImproved ? 'text-[#00855b]' : 'text-[#ba1a1a]'}`}>
@@ -255,7 +255,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         <div className="card !p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-outfit text-xs text-[#494454] font-medium">Adesão Ativa</span>
-            <span className="material-symbols-outlined text-[18px] text-[#0051d5]">
+            <span className="material-symbols-outlined text-[1.25rem] text-[#0051d5]">
               how_to_reg
             </span>
           </div>
@@ -266,7 +266,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1 mt-0.5">
-              <span className="material-symbols-outlined text-[14px] text-[#0051d5] font-bold">
+              <span className="material-symbols-outlined text-[1rem] text-[#0051d5] font-bold">
                 people
               </span>
               <span className="font-outfit text-xs text-[#494454] truncate">
@@ -287,7 +287,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         <div className="card !p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-outfit text-xs text-[#494454] font-medium">Risco de Burnout</span>
-            <span className="material-symbols-outlined text-[18px] text-[#6b38d4]">
+            <span className="material-symbols-outlined text-[1.25rem] text-[#6b38d4]">
               psychology_alt
             </span>
           </div>
@@ -298,7 +298,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1 mt-0.5">
-              <span className={`material-symbols-outlined text-[16px] ${burnoutImproved ? 'text-[#00855b]' : 'text-[#ba1a1a]'}`}>
+              <span className={`material-symbols-outlined text-[1.125rem] ${burnoutImproved ? 'text-[#00855b]' : 'text-[#ba1a1a]'}`}>
                 {burnoutImproved ? 'trending_down' : 'trending_up'}
               </span>
               <span className={`font-outfit text-xs font-semibold truncate ${burnoutImproved ? 'text-[#00855b]' : 'text-[#ba1a1a]'}`}>
@@ -331,7 +331,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         <div className="card !p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-outfit text-xs text-[#494454] font-medium">Sessões / Mês</span>
-            <span className="material-symbols-outlined text-[18px] text-[#8455ef]">
+            <span className="material-symbols-outlined text-[1.25rem] text-[#8455ef]">
               support_agent
             </span>
           </div>
@@ -342,7 +342,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1 mt-0.5">
-              <span className="material-symbols-outlined text-[14px] text-[#00855b] font-bold">
+              <span className="material-symbols-outlined text-[1rem] text-[#00855b] font-bold">
                 check_circle
               </span>
               <span className="font-outfit text-xs text-[#494454]">100% confidenciais</span>
@@ -377,19 +377,19 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         <div className="flex items-center justify-between sm:justify-start sm:gap-6 py-2 px-3 rounded-2xl bg-[#eff4ff] text-[#494454]">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#00855b]" />
-            <span className="font-outfit text-[10px] uppercase font-bold text-[#006947]">
+            <span className="font-outfit text-3xs uppercase font-bold text-[#006947]">
               Saudável
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#316bf3]" />
-            <span className="font-outfit text-[10px] uppercase font-bold text-[#0051d5]">
+            <span className="font-outfit text-3xs uppercase font-bold text-[#0051d5]">
               Moderado
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#ba1a1a]" />
-            <span className="font-outfit text-[10px] uppercase font-bold text-[#ba1a1a]">
+            <span className="font-outfit text-3xs uppercase font-bold text-[#ba1a1a]">
               Risco Elevado
             </span>
           </div>
@@ -405,7 +405,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
                   <span className="font-normal text-xs text-[#7b7486]"> · {team.memberCount} pessoas</span>
                 </span>
                 <div className="flex items-center gap-1 font-outfit text-xs text-[#494454]">
-                  <span className="material-symbols-outlined text-[14px] text-[#00855b] font-bold">
+                  <span className="material-symbols-outlined text-[1rem] text-[#00855b] font-bold">
                     check
                   </span>
                   <span>{team.healthyPct}% Saudável</span>
@@ -448,14 +448,14 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#6ffbbe] text-[20px] fill-1">
+              <span className="material-symbols-outlined text-[#6ffbbe] text-[1.375rem] fill-1">
                 monetization_on
               </span>
               <h3 className="font-sora text-base text-[#eaf1ff] font-bold">
                 Retorno & Eficiência (ROI)
               </h3>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-[#4edea3]/20 text-[#6ffbbe] font-outfit text-[11px] font-semibold uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-full bg-[#4edea3]/20 text-[#6ffbbe] font-outfit text-2xs font-semibold uppercase tracking-wider">
               Auditado
             </span>
           </div>
@@ -464,7 +464,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
             {/* Retorno 1 */}
             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#0b1c30]/40 backdrop-blur-sm border border-white/5">
               <div className="w-10 h-10 rounded-full bg-[#00855b]/20 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#6ffbbe] text-[22px]">savings</span>
+                <span className="material-symbols-outlined text-[#6ffbbe] text-[1.5rem]">savings</span>
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-outfit text-xs text-[#eaf1ff]/70 truncate">
@@ -479,7 +479,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
             {/* Retorno 2 */}
             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#0b1c30]/40 backdrop-blur-sm border border-white/5">
               <div className="w-10 h-10 rounded-full bg-[#316bf3]/20 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#dbe1ff] text-[22px]">
+                <span className="material-symbols-outlined text-[#dbe1ff] text-[1.5rem]">
                   medical_services
                 </span>
               </div>
@@ -503,7 +503,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
       <section className="card flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 shrink-0 rounded-full bg-[#e9ddff] flex items-center justify-center text-[#6b38d4]">
-            <span className="material-symbols-outlined text-[20px]">neurology</span>
+            <span className="material-symbols-outlined text-[1.375rem]">neurology</span>
           </div>
           <div>
             <h3 className="font-sora text-base font-bold text-[#0b1c30]">
@@ -518,7 +518,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
         {/* Cartão de Sugestão Preditiva */}
         <div className="flex flex-col gap-2 p-4 rounded-2xl bg-[#eff4ff] text-[#0b1c30] border border-[#dce9ff]">
           <div className="flex items-center gap-1.5 text-[#6b38d4] font-semibold">
-            <span className="material-symbols-outlined text-[18px]">lightbulb</span>
+            <span className="material-symbols-outlined text-[1.25rem]">lightbulb</span>
             <span className="font-outfit text-xs font-bold">Alerta Preventivo: Setor Comercial</span>
           </div>
           <p className="font-outfit text-sm text-[#494454] leading-relaxed">
@@ -537,7 +537,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
               }`}
             >
               <span>{protocolAdopted ? 'Protocolo ativado' : 'Adotar protocolo'}</span>
-              <span className="material-symbols-outlined text-[15px]">
+              <span className="material-symbols-outlined text-[1.0625rem]">
                 {protocolAdopted ? 'done_all' : 'arrow_forward'}
               </span>
             </button>
@@ -549,7 +549,7 @@ export const ManagementScreen: React.FC<ManagementScreenProps> = ({
           onClick={() => onOpenReportModal(selectedDept)}
           className="lg:hidden w-full h-12 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition-all mt-1"
         >
-          <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+          <span className="material-symbols-outlined text-[1.375rem]">picture_as_pdf</span>
           <span>Exportar relatório (ESG/CIPA)</span>
         </button>
       </section>

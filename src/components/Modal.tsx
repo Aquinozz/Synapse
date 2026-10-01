@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -14,12 +15,18 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
+// Open dialogs, oldest first. Only the one on top answers the keyboard, so Esc closes a
+// dialog opened from another dialog without closing both.
+const openDialogs: symbol[] = [];
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * Shared dialog shell: bottom sheet on phones, centered card from `sm` up.
  * Handles Esc, backdrop click, focus trap/restore and page scroll lock.
+ * It is rendered straight into <body>, so it covers the viewport even when opened from inside
+ * an element that confines fixed positioning (the headers use backdrop-filter, which does).
  * Children only mount while open, so their local state resets on every open.
  */
 export const Modal: React.FC<ModalProps> = ({
@@ -38,12 +45,15 @@ export const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    const id = Symbol('dialog');
+    openDialogs.push(id);
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     panelRef.current?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (openDialogs[openDialogs.length - 1] !== id) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
         onCloseRef.current();
@@ -71,6 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      openDialogs.splice(openDialogs.indexOf(id), 1);
       document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus?.();
     };
@@ -78,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       className={`fixed inset-0 z-50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 animate-fade-in ${
         dimmed ? 'bg-[#0b1c30]/75' : 'bg-[#0b1c30]/60'
@@ -97,7 +108,8 @@ export const Modal: React.FC<ModalProps> = ({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -113,6 +125,6 @@ export const ModalCloseButton: React.FC<ModalCloseButtonProps> = ({ onClose, cla
     aria-label="Fechar"
     className={`w-10 h-10 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] flex items-center justify-center text-[#494454] hover:text-[#0b1c30] shrink-0 transition-colors ${className}`}
   >
-    <span className="material-symbols-outlined text-[20px]">close</span>
+    <span className="material-symbols-outlined text-[1.375rem]">close</span>
   </button>
 );

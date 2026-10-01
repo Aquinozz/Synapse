@@ -6,6 +6,26 @@
 
   --breakpoint-xs: 24rem;
 
+  /* The app's type scale: Tailwind's, one step larger (reading text 12.5%, headings 6%).
+     Line heights are ratios, so they follow. The text-size preference below scales the same names;
+     3xs, 2xs and smd are the small sizes Tailwind does not have. */
+  --text-3xs: 0.7031rem;
+  --text-3xs--line-height: calc(0.875 / 0.625);
+  --text-2xs: 0.7734rem;
+  --text-2xs--line-height: calc(1 / 0.6875);
+  --text-xs: 0.8438rem;
+  --text-smd: 0.9141rem;
+  --text-smd--line-height: calc(1.25 / 0.8125);
+  --text-sm: 0.9844rem;
+  --text-base: 1.125rem;
+  --text-lg: 1.2656rem;
+  --text-xl: 1.4062rem;
+  --text-2xl: 1.59rem;
+  --text-3xl: 1.9875rem;
+  --text-4xl: 2.385rem;
+  --text-5xl: 3.18rem;
+  --text-6xl: 3.975rem;
+
   --animate-fade-in: fade-in 0.2s ease-out both;
   --animate-pop-in: pop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-sheet-in: sheet-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -192,8 +212,77 @@
   }
 }
 
+/* Larger text, chosen in the accessibility modal. Only the font sizes grow: spacing and
+   breakpoints stay as they are, so the layouts keep fitting. Reading text grows by the full
+   step; headings, already large, grow by less. Icons keep their size. */
+:root[data-text-size='large'] {
+  --text-3xs: 0.8125rem;
+  --text-2xs: 0.8938rem;
+  --text-xs: 0.975rem;
+  --text-smd: 1.0562rem;
+  --text-sm: 1.1375rem;
+  --text-base: 1.3rem;
+  --text-lg: 1.4625rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 1.68rem;
+  --text-3xl: 2.1rem;
+  --text-4xl: 2.52rem;
+  --text-5xl: 3.36rem;
+  --text-6xl: 4.2rem;
+}
+:root[data-text-size='larger'] {
+  --text-3xs: 0.9375rem;
+  --text-2xs: 1.0312rem;
+  --text-xs: 1.125rem;
+  --text-smd: 1.2188rem;
+  --text-sm: 1.3125rem;
+  --text-base: 1.5rem;
+  --text-lg: 1.6875rem;
+  --text-xl: 1.875rem;
+  --text-2xl: 1.8rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 2.7rem;
+  --text-5xl: 3.6rem;
+  --text-6xl: 4.5rem;
+}
+
+/* Colour-vision correction, chosen in the accessibility modal. The filters are defined by
+   ColorVisionFilters (accessibility/colorVision.tsx).
+
+   A filter turns its element into the containing block of fixed-position descendants, which
+   would unpin the header, the navigation and the modals. The root element is exempt from
+   that, but Firefox ignores SVG filters on it. So, while a mode is on, <body> becomes a
+   viewport-sized box that carries the filter and the page scrolls inside #root: fixed
+   elements are then placed against <body>, which never moves, and stay pinned. */
+:root[data-color-vision],
+:root[data-color-vision] body {
+  height: 100%;
+  overflow: hidden;
+}
+:root[data-color-vision] #root {
+  height: 100%;
+  overflow-y: auto;
+}
+:root[data-color-vision='protanopia'] body {
+  filter: url('#color-vision-protanopia');
+}
+:root[data-color-vision='deuteranopia'] body {
+  filter: url('#color-vision-deuteranopia');
+}
+:root[data-color-vision='tritanopia'] body {
+  filter: url('#color-vision-tritanopia');
+}
+
 /* Printing: only the element marked .print-area (the executive report) goes to paper */
 @media print {
+  /* Paper gets the whole document in its original colours */
+  :root[data-color-vision],
+  :root[data-color-vision] body,
+  :root[data-color-vision] #root {
+    height: auto;
+    overflow: visible;
+    filter: none;
+  }
   body * {
     visibility: hidden;
   }

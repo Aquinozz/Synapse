@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 import { Logo } from './Logo';
+import { AccessibilityButton } from './AccessibilityButton';
 import { Avatar } from './Avatar';
+import { scrollPageToTop } from '../utils/scroll';
 
 export interface NavItem {
   to: string;
@@ -41,6 +43,11 @@ export const AppShell: React.FC<AppShellProps> = ({
   children,
 }) => {
   const { pathname } = useLocation();
+  // Each section opens at its top, whichever way it was reached
+  useEffect(() => {
+    scrollPageToTop();
+  }, [pathname]);
+
   const title = navItems.find((item) => pathname.startsWith(item.to))?.label ?? 'Synapse';
   const firstName = user.name.replace(/^Dra?\.\s*/, '').split(' ')[0];
 
@@ -72,7 +79,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               {({ isActive }) => (
                 <>
                   <span
-                    className={`material-symbols-outlined text-[22px] ${
+                    className={`material-symbols-outlined text-[1.5rem] ${
                       isActive && !item.keepOutlined ? 'fill-1' : ''
                     }`}
                   >
@@ -101,7 +108,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 to="/"
                 tabIndex={-1}
                 aria-hidden="true"
-                className="lg:hidden font-sora text-[11px] font-bold text-[#6b38d4] tracking-wide uppercase leading-tight"
+                className="lg:hidden font-sora text-2xs font-bold text-[#6b38d4] tracking-wide uppercase leading-tight"
               >
                 Synapse
               </Link>
@@ -114,12 +121,14 @@ export const AppShell: React.FC<AppShellProps> = ({
           <div className="flex items-center gap-1 shrink-0">
             {headerBadge && (
               <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 mr-1 rounded-full bg-[#dbe1ff]/60">
-                <span className="material-symbols-outlined text-[14px] text-[#003ea8]">shield_lock</span>
-                <span className="font-outfit text-[11px] leading-none text-[#003ea8] tracking-wide font-semibold">
+                <span className="material-symbols-outlined text-[1rem] text-[#003ea8]">shield_lock</span>
+                <span className="font-outfit text-2xs leading-none text-[#003ea8] tracking-wide font-semibold">
                   {headerBadge}
                 </span>
               </div>
             )}
+
+            <AccessibilityButton />
 
             {onOpenNotifications && (
               <button
@@ -131,7 +140,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 }
                 className="w-11 h-11 rounded-full flex items-center justify-center text-[#494454] hover:bg-[#e5eeff] active:bg-[#dce9ff] transition-colors relative"
               >
-                <span className="material-symbols-outlined text-[22px]">notifications</span>
+                <span className="material-symbols-outlined text-[1.5rem]">notifications</span>
                 {unreadNotifications > 0 && (
                   <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#8455ef] ring-2 ring-[#f8f9ff]" />
                 )}
@@ -179,7 +188,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <>
                   <span className={`px-4 py-0.5 rounded-full transition-colors flex ${isActive ? 'bg-[#e9ddff]' : ''}`}>
                     <span
-                      className={`material-symbols-outlined text-[24px] ${
+                      className={`material-symbols-outlined text-[1.6875rem] ${
                         isActive && !item.keepOutlined ? 'fill-1' : ''
                       }`}
                     >
@@ -187,7 +196,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                     </span>
                   </span>
                   <span
-                    className={`font-outfit text-[11px] leading-tight mt-0.5 tracking-tight ${
+                    className={`font-outfit text-[length:min(var(--text-2xs),0.875rem)] leading-tight mt-0.5 tracking-tight ${
                       isActive ? 'font-bold' : 'font-medium'
                     }`}
                   >

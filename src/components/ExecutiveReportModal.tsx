@@ -31,7 +31,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         {/* Actions header */}
         <div className="flex items-start justify-between gap-3 pb-4 border-b border-[#eff4ff]">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="material-symbols-outlined text-[24px] text-[#6b38d4]">
+            <span className="material-symbols-outlined text-[1.6875rem] text-[#6b38d4]">
               picture_as_pdf
             </span>
             <div>
@@ -50,21 +50,21 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         <div className="my-4 space-y-4 text-xs font-outfit text-[#494454]">
           <div className="p-4 rounded-2xl bg-[#eff4ff] flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <div className="text-[11px] text-[#494454] uppercase tracking-wider font-semibold">
+              <div className="text-2xs text-[#494454] uppercase tracking-wider font-semibold">
                 Escopo Selecionado
               </div>
               <div className="font-sora text-base font-bold text-[#0b1c30]">
                 {departmentName}
               </div>
-              <div className="text-[11px] text-[#0051d5]">
+              <div className="text-2xs text-[#0051d5]">
                 {kpis.totalEmployees} colaboradores protegidos · Base anonimizada
               </div>
             </div>
             <div className="sm:text-right">
-              <span className="inline-block px-2.5 py-1 rounded-full bg-[#6ffbbe]/40 text-[#002113] font-bold text-[10px] uppercase">
+              <span className="inline-block px-2.5 py-1 rounded-full bg-[#6ffbbe]/40 text-[#002113] font-bold text-3xs uppercase">
                 Certificação ESG / CIPA
               </span>
-              <div className="text-[10px] text-[#494454] mt-1">
+              <div className="text-3xs text-[#494454] mt-1">
                 Data de emissão: {new Date().toLocaleDateString('pt-BR')}
               </div>
             </div>
@@ -73,32 +73,32 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           {/* Metric Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 bg-[#f8f9ff] rounded-2xl border border-[#e5eeff]">
-              <span className="text-[10px] uppercase font-bold text-[#494454]">Índice de Bem-Estar</span>
+              <span className="text-3xs uppercase font-bold text-[#494454]">Índice de Bem-Estar</span>
               <div className="font-sora text-2xl font-bold text-[#0b1c30] mt-1">
                 {kpis.wellnessIndex}/100
               </div>
-              <span className={`font-semibold text-[11px] ${kpis.wellnessDelta.startsWith('-') ? 'text-[#ba1a1a]' : 'text-[#00855b]'}`}>{kpis.wellnessDelta}</span>
+              <span className={`font-semibold text-2xs ${kpis.wellnessDelta.startsWith('-') ? 'text-[#ba1a1a]' : 'text-[#00855b]'}`}>{kpis.wellnessDelta}</span>
             </div>
             <div className="p-3 bg-[#f8f9ff] rounded-2xl border border-[#e5eeff]">
-              <span className="text-[10px] uppercase font-bold text-[#494454]">Adesão aos Cuidados</span>
+              <span className="text-3xs uppercase font-bold text-[#494454]">Adesão aos Cuidados</span>
               <div className="font-sora text-2xl font-bold text-[#0b1c30] mt-1">
                 {kpis.activeAdoptionPct}%
               </div>
-              <span className="text-[#0051d5] font-semibold text-[11px]">{kpis.activeMembers} membros ativos</span>
+              <span className="text-[#0051d5] font-semibold text-2xs">{kpis.activeMembers} membros ativos</span>
             </div>
             <div className="p-3 bg-[#f8f9ff] rounded-2xl border border-[#e5eeff]">
-              <span className="text-[10px] uppercase font-bold text-[#494454]">Risco de Burnout</span>
+              <span className="text-3xs uppercase font-bold text-[#494454]">Risco de Burnout</span>
               <div className="font-sora text-2xl font-bold text-[#6b38d4] mt-1">
                 {kpis.burnoutRiskPct}%
               </div>
-              <span className={`font-semibold text-[11px] ${kpis.burnoutDelta.startsWith('+') ? 'text-[#ba1a1a]' : 'text-[#00855b]'}`}>{kpis.burnoutDelta}</span>
+              <span className={`font-semibold text-2xs ${kpis.burnoutDelta.startsWith('+') ? 'text-[#ba1a1a]' : 'text-[#00855b]'}`}>{kpis.burnoutDelta}</span>
             </div>
             <div className="p-3 bg-[#f8f9ff] rounded-2xl border border-[#e5eeff]">
-              <span className="text-[10px] uppercase font-bold text-[#494454]">Retorno Financeiro</span>
+              <span className="text-3xs uppercase font-bold text-[#494454]">Retorno Financeiro</span>
               <div className="font-sora text-xl font-bold text-[#00855b] mt-1">
                 {kpis.savingsRoi}
               </div>
-              <span className="text-[#494454] text-[10px]">Economia em turnover</span>
+              <span className="text-[#494454] text-3xs">Economia em turnover</span>
             </div>
           </div>
 
@@ -130,13 +130,13 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           </div>
 
           {/* Signatures */}
-          <div className="pt-4 border-t border-[#eff4ff] flex items-center justify-between gap-3 flex-wrap text-[11px] text-[#494454]">
+          <div className="pt-4 border-t border-[#eff4ff] flex items-center justify-between gap-3 flex-wrap text-2xs text-[#494454]">
             <div>
               <span className="font-bold text-[#0b1c30]">Auditoria de Riscos Psicossociais</span>
               <div>Conselho Consultivo Synapse & Especialistas CRP/CRM</div>
             </div>
             <div className="flex items-center gap-1.5 text-[#00855b] font-semibold">
-              <span className="material-symbols-outlined text-[16px]">verified</span>
+              <span className="material-symbols-outlined text-[1.125rem]">verified</span>
               <span>Assinatura Digital Válida ICP-Brasil</span>
             </div>
           </div>
@@ -154,7 +154,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
             onClick={handlePrint}
             className="flex-1 h-11 min-h-11 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined text-[18px]">print</span>
+            <span className="material-symbols-outlined text-[1.25rem]">print</span>
             <span>Imprimir / Salvar PDF</span>
           </button>
         </div>

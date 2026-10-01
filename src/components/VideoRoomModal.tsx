@@ -93,7 +93,7 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
               showNotes ? 'bg-[#6b38d4] text-white' : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
-            <span className="material-symbols-outlined text-[16px]">description</span>
+            <span className="material-symbols-outlined text-[1.125rem]">description</span>
             <span className="hidden xs:inline">Anotações</span>
           </button>
         </div>
@@ -119,7 +119,7 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
 
           {/* Sound wave activity badge */}
           <div className="absolute top-4 left-4 z-10 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-xs">
-            <span className="material-symbols-outlined text-[16px] text-[#6ffbbe]">mic</span>
+            <span className="material-symbols-outlined text-[1.125rem] text-[#6ffbbe]">mic</span>
             <div className="flex items-end gap-0.5 h-3" aria-hidden="true">
               <span className="w-1 bg-[#6ffbbe] h-2 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
               <span className="w-1 bg-[#6ffbbe] h-3 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -133,15 +133,15 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
               <img src={selfImage} alt="Você" className="w-full h-full object-cover" />
             ) : camOn ? (
               <div className="w-full h-full flex items-center justify-center text-white/50">
-                <span className="material-symbols-outlined text-[32px]">person</span>
+                <span className="material-symbols-outlined text-[2.25rem]">person</span>
               </div>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-white/50 text-xs">
-                <span className="material-symbols-outlined text-[24px]">videocam_off</span>
+                <span className="material-symbols-outlined text-[1.6875rem]">videocam_off</span>
                 <span>Câmera desligada</span>
               </div>
             )}
-            <div className="absolute bottom-1 left-2 text-[10px] text-white/80 bg-black/50 px-1 rounded font-outfit">
+            <div className="absolute bottom-1 left-2 text-3xs text-white/80 bg-black/50 px-1 rounded font-outfit">
               Você
             </div>
           </div>
@@ -159,10 +159,10 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
                 aria-label="Fechar notas"
                 className="w-9 h-9 -mr-2 rounded-full flex items-center justify-center text-[#494454] hover:text-[#0b1c30] hover:bg-[#eff4ff]"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <span className="material-symbols-outlined text-[1.25rem]">close</span>
               </button>
             </div>
-            <p className="text-[11px] text-[#494454] my-2">
+            <p className="text-2xs text-[#494454] my-2">
               Somente você tem acesso a estas anotações.
             </p>
             <textarea
@@ -198,7 +198,7 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
             micOn ? 'bg-white/15 text-white hover:bg-white/25' : 'bg-[#ba1a1a] text-white'
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
+          <span className="material-symbols-outlined text-[1.5rem]">
             {micOn ? 'mic' : 'mic_off'}
           </span>
         </button>
@@ -210,7 +210,7 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
             camOn ? 'bg-white/15 text-white hover:bg-white/25' : 'bg-[#ba1a1a] text-white'
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
+          <span className="material-symbols-outlined text-[1.5rem]">
             {camOn ? 'videocam' : 'videocam_off'}
           </span>
         </button>
@@ -220,7 +220,7 @@ const VideoRoom: React.FC<Omit<VideoRoomModalProps, 'isOpen'>> = ({
           aria-label="Encerrar Chamada"
           className="h-12 px-6 rounded-full bg-[#ba1a1a] hover:bg-[#93000a] text-white font-outfit text-sm font-bold flex items-center gap-2 shadow-lg active:scale-95 transition-all"
         >
-          <span className="material-symbols-outlined text-[20px]">call_end</span>
+          <span className="material-symbols-outlined text-[1.375rem]">call_end</span>
           <span>Encerrar Sessão</span>
         </button>
       </div>

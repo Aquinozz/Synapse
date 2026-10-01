@@ -43,7 +43,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             className="max-w-sm px-4 py-2.5 rounded-2xl bg-[#0b1c30] text-white text-xs font-outfit shadow-lg flex items-center gap-2 animate-toast-in"
           >
             <span
-              className={`material-symbols-outlined text-[18px] shrink-0 ${
+              className={`material-symbols-outlined text-[1.25rem] shrink-0 ${
                 t.tone === 'success' ? 'text-[#4edea3]' : 'text-[#b4c5ff]'
               }`}
             >

@@ -109,7 +109,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
     return (
       <div className="flex flex-col items-center text-center py-4 gap-3">
         <div className="w-16 h-16 rounded-full bg-[#f5fff6] text-[#00855b] flex items-center justify-center shadow-inner">
-          <span className="material-symbols-outlined text-[36px] fill-1">check_circle</span>
+          <span className="material-symbols-outlined text-[2.5rem] fill-1">check_circle</span>
         </div>
         <div>
           <span className="font-outfit text-xs font-bold uppercase tracking-wider text-[#00855b]">
@@ -136,7 +136,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
         </div>
 
         <div className="w-full p-3 rounded-2xl bg-[#eff4ff] text-left text-sm text-[#494454] flex items-start gap-2">
-          <span className="material-symbols-outlined text-[18px] text-[#0051d5] shrink-0">verified</span>
+          <span className="material-symbols-outlined text-[1.25rem] text-[#0051d5] shrink-0">verified</span>
           <span>
             Sessão paga pela sua empresa. Ela não é informada de quando ou com quem você consulta.
           </span>
@@ -272,7 +272,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
                     : 'bg-[#eff4ff] text-[#0b1c30] border-transparent hover:bg-[#e5eeff]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">{option.icon}</span>
+                <span className="material-symbols-outlined text-[1.25rem]">{option.icon}</span>
                 <span>{option.label}</span>
               </button>
             ))}
@@ -282,7 +282,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
 
       {/* What the plan covers */}
       <div className="p-3 bg-[#6ffbbe]/25 rounded-2xl flex items-start gap-2 text-[#002113] font-outfit text-sm">
-        <span className="material-symbols-outlined text-[18px] text-[#006947] shrink-0">check_circle</span>
+        <span className="material-symbols-outlined text-[1.25rem] text-[#006947] shrink-0">check_circle</span>
         <span>
           {isSwitching
             ? `Seu plano cobre 1 sessão por semana. Ao confirmar, ${therapist.name} passa a ser seu psicólogo no lugar de ${currentTherapist?.name}.`
@@ -292,7 +292,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
 
       {error && (
         <p role="alert" className="p-3 rounded-2xl bg-[#ffdad6]/60 font-outfit text-sm text-[#93000a] flex items-start gap-2">
-          <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+          <span className="material-symbols-outlined text-[1.25rem] shrink-0">error</span>
           {error}
         </p>
       )}
@@ -305,7 +305,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
       >
         {isSubmitting ? (
           <>
-            <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+            <span className="material-symbols-outlined text-[1.375rem] animate-spin">progress_activity</span>
             <span>Confirmando...</span>
           </>
         ) : !canConfirm ? (
@@ -313,7 +313,7 @@ const ScheduleContent: React.FC<{ therapist: Therapist; mode: ScheduleMode; onCl
         ) : (
           <>
             <span>{mode === 'choose' ? 'Confirmar horário fixo' : 'Confirmar novo horário'}</span>
-            <span className="material-symbols-outlined text-[20px]">check</span>
+            <span className="material-symbols-outlined text-[1.375rem]">check</span>
           </>
         )}
       </button>

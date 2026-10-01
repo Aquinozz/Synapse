@@ -169,8 +169,8 @@ const BreathingContent: React.FC<{
       {/* Top Controls */}
       <div className="w-full flex items-center justify-between z-10 mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[18px] text-[#6b38d4]">air</span>
-          <span className="font-sora text-[13px] font-bold text-[#0b1c30]">
+          <span className="material-symbols-outlined text-[1.25rem] text-[#6b38d4]">air</span>
+          <span className="font-sora text-smd font-bold text-[#0b1c30]">
             Respiração {techniqueName}
           </span>
         </div>
@@ -181,7 +181,7 @@ const BreathingContent: React.FC<{
             aria-pressed={soundEnabled}
             className="w-10 h-10 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] flex items-center justify-center text-[#494454] hover:text-[#0b1c30] transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span className="material-symbols-outlined text-[1.375rem]">
               {soundEnabled ? 'volume_up' : 'volume_off'}
             </span>
           </button>
@@ -192,12 +192,12 @@ const BreathingContent: React.FC<{
       {isFinished ? (
         <div className="flex flex-col items-center text-center z-10 py-6 gap-2 animate-fade-in">
           <div className="w-16 h-16 rounded-full bg-[#f5fff6] text-[#00855b] flex items-center justify-center shadow-inner">
-            <span className="material-symbols-outlined text-[36px] fill-1">check_circle</span>
+            <span className="material-symbols-outlined text-[2.5rem] fill-1">check_circle</span>
           </div>
           <h4 className="font-sora text-lg font-bold text-[#0b1c30] mt-1">
             Prática concluída
           </h4>
-          <p className="font-outfit text-[13px] text-[#494454] leading-snug max-w-[260px]">
+          <p className="font-outfit text-smd text-[#494454] leading-snug max-w-[260px]">
             Você completou {TOTAL_CYCLES} ciclos de respiração {techniqueName}. Observe como seu corpo está agora antes de voltar à rotina.
           </p>
         </div>
@@ -205,7 +205,7 @@ const BreathingContent: React.FC<{
         <>
           {/* Cycle indicator */}
           <div className="flex flex-col items-center gap-1.5 z-10 mb-4">
-            <div className="text-[12px] font-outfit text-[#494454]">
+            <div className="text-xs font-outfit text-[#494454]">
               Ciclo <strong className="text-[#6b38d4]">{cycleCount}</strong> de {TOTAL_CYCLES} · Relaxamento Nervo Vago
             </div>
             <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -246,7 +246,7 @@ const BreathingContent: React.FC<{
               <span className="font-sora text-4xl font-bold tracking-tight tabular-nums">
                 {secondsLeft}s
               </span>
-              <span className="text-[10px] font-outfit font-semibold uppercase tracking-wider opacity-90">
+              <span className="text-3xs font-outfit font-semibold uppercase tracking-wider opacity-90">
                 {details.short}
               </span>
             </div>
@@ -257,7 +257,7 @@ const BreathingContent: React.FC<{
             <h4 className="font-sora text-base font-bold text-[#0b1c30]">
               {isActive ? details.label : 'Em pausa'}
             </h4>
-            <p className="font-outfit text-[13px] text-[#494454] mt-0.5 leading-snug">
+            <p className="font-outfit text-smd text-[#494454] mt-0.5 leading-snug">
               {isActive ? details.sub : 'Retome quando quiser.'}
             </p>
           </div>
@@ -271,7 +271,7 @@ const BreathingContent: React.FC<{
             onClick={handleRestart}
             className="flex-1 h-11 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#0b1c30] font-outfit text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">replay</span>
+            <span className="material-symbols-outlined text-[1.25rem]">replay</span>
             <span>Repetir</span>
           </button>
         ) : (
@@ -279,7 +279,7 @@ const BreathingContent: React.FC<{
             onClick={() => setIsActive(!isActive)}
             className="flex-1 h-11 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">
+            <span className="material-symbols-outlined text-[1.25rem]">
               {isActive ? 'pause' : 'play_arrow'}
             </span>
             <span>{isActive ? 'Pausar' : 'Retomar'}</span>
