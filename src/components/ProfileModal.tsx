@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSession } from '../auth/session';
 import { Avatar } from './Avatar';
 import { Modal, ModalCloseButton } from './Modal';
+import { TermsModal } from './TermsModal';
+import { PhotoPicker } from './PhotoPicker';
 import { useEmployeePlan } from '../areas/employee/plan';
 import { formatRecurring } from '../utils/schedule';
 
@@ -19,7 +21,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onLogout,
 }) => {
   const { plan, therapist } = useEmployeePlan();
-  const { session } = useSession();
+  const { session, updateAvatar } = useSession();
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const name = session?.name ?? '';
 
   return (
@@ -28,7 +31,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
         {/* Profile Details */}
         <div className="flex flex-col items-center text-center pb-4 border-b border-[#eff4ff]">
-          <Avatar name={name} className="w-16 h-16 text-xl mb-2" />
+          <Avatar name={name} image={session?.avatar} className="w-20 h-20 text-2xl mb-2" />
+          <PhotoPicker hasPhoto={Boolean(session?.avatar)} onSave={updateAvatar} className="mb-2" />
           <h3 className="font-sora text-base font-bold text-[#0b1c30]">{name}</h3>
           <span className="text-xs text-[#494454] font-outfit">{session?.email}</span>
           {session?.companyName && (
@@ -61,14 +65,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div className="p-3 bg-[#eff4ff] rounded-2xl space-y-1.5 border border-[#dce9ff]">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1 text-[#0051d5] font-semibold">
-                <span className="material-symbols-outlined text-[16px]">enhanced_encryption</span>
+                <span className="material-symbols-outlined text-[1.125rem]">enhanced_encryption</span>
                 Anonimato LGPD
               </span>
-              <span className="px-1.5 py-0.5 rounded-full bg-[#6ffbbe] text-[#002113] text-[9px] font-bold uppercase">
+              <span className="px-1.5 py-0.5 rounded-full bg-[#6ffbbe] text-[#002113] text-3xs font-bold uppercase">
                 Ativo
               </span>
             </div>
-            <p className="text-[11px] text-[#494454] leading-snug">
+            <p className="text-2xs text-[#494454] leading-snug">
               Nenhuma métrica individual ou agendamento é compartilhado com a diretoria ou RH da sua empresa.
             </p>
           </div>
@@ -77,7 +81,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-2xl bg-[#f8f9ff] border border-[#e5eeff]">
             <div className="flex flex-col">
               <span className="font-bold text-[#0b1c30]">Discretion Shade</span>
-              <span className="text-[11px] text-[#494454]">
+              <span className="text-2xs text-[#494454]">
                 Desfoque instantâneo contra olhares curiosos
               </span>
             </div>
@@ -101,10 +105,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           Concluir
         </button>
         <button
+          onClick={() => setIsTermsOpen(true)}
+          className="w-full h-11 mt-1 shrink-0 rounded-full text-[#5516be] hover:bg-[#eff4ff] font-outfit text-sm font-semibold transition-colors"
+        >
+          Termo e privacidade (LGPD)
+        </button>
+        <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+        <button
           onClick={onLogout}
           className="w-full h-11 mt-1 shrink-0 rounded-full text-[#ba1a1a] hover:bg-[#ffdad6]/50 font-outfit text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
         >
-          <span className="material-symbols-outlined text-[18px]">logout</span>
+          <span className="material-symbols-outlined text-[1.25rem]">logout</span>
           Sair
         </button>
     </Modal>

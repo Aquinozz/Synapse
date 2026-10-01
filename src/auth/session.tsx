@@ -2,6 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { Navigate } from 'react-router';
 import { api, getToken, setToken, setUnauthorizedHandler } from '../api/client';
 import { LoadingScreen } from '../components/LoadingScreen';
+import { TermsGate } from '../components/TermsGate';
+import { TERMS_VERSION } from '../legal/terms';
 
 export type Role = 'employee' | 'psychologist';
 
@@ -10,18 +12,35 @@ export interface Session {
   role: Role;
   name: string;
   email: string;
+  /** Employees: profile photo as a data URL, or null */
+  avatar?: string | null;
   /** Employees: the company paying for the plan */
   companyName?: string;
   /** Psychologists: 'pending' until the professional registration is checked */
   status?: 'pending' | 'active';
+  /** The account accepted the current version of the terms */
+  termsAccepted: boolean;
+}
+
+/** What the person ticked: the terms and, for employees, the health-data consent */
+interface AcceptanceInput {
+  terms: boolean;
+  healthData: boolean;
 }
 
 /** Demo accounts offered on the login page */
 export type DemoAccount = 'employee' | 'new-employee' | 'psychologist';
 
-export type RegisterInput =
+export type RegisterInput = (
   | { role: 'employee'; name: string; email: string; password: string; companyCode: string }
-  | { role: 'psychologist'; name: string; email: string; password: string; reg: string; title: string };
+  | { role: 'psychologist'; name: string; email: string; password: string; reg: string; title: string }
+) & { acceptance: AcceptanceInput };
+
+const acceptancePayload = (acceptance: AcceptanceInput) => ({
+  acceptedTerms: acceptance.terms,
+  healthDataConsent: acceptance.healthData,
+  termsVersion: TERMS_VERSION,
+});
 
 interface SessionContextValue {
   session: Session | null;
@@ -33,6 +52,10 @@ interface SessionContextValue {
   register: (input: RegisterInput) => Promise<Session>;
   /** Enters a demo account without a password */
   loginDemo: (account: DemoAccount) => Promise<Session>;
+  /** Records the acceptance of the terms for the signed-in account */
+  acceptTerms: (acceptance: AcceptanceInput) => Promise<void>;
+  /** Saves the employee's profile photo (a data URL), or removes it with null */
+  updateAvatar: (image: string | null) => Promise<void>;
   logout: () => void;
 }
 
@@ -90,16 +113,31 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   );
 
   const register = useCallback(
-    async (input: RegisterInput) =>
-      start(await api<{ token: string; user: Session }>('POST', '/auth/register', input)),
+    async ({ acceptance, ...input }: RegisterInput) =>
+      start(
+        await api<{ token: string; user: Session }>('POST', '/auth/register', {
+          ...input,
+          ...acceptancePayload(acceptance),
+        })
+      ),
     [start]
   );
+
+  const acceptTerms = useCallback(async (acceptance: AcceptanceInput) => {
+    const { user } = await api<{ user: Session }>('POST', '/auth/terms', acceptancePayload(acceptance));
+    setSession(user);
+  }, []);
 
   const loginDemo = useCallback(
     async (account: DemoAccount) =>
       start(await api<{ token: string; user: Session }>('POST', '/auth/demo', { account })),
     [start]
   );
+
+  const updateAvatar = useCallback(async (image: string | null) => {
+    const { user } = await api<{ user: Session }>('PUT', '/auth/avatar', { image });
+    setSession(user);
+  }, []);
 
   const logout = useCallback(() => {
     // Revoke on the server in the background; the local session ends either way
@@ -110,7 +148,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   return (
-    <SessionContext.Provider value={{ session, ready, signedOut, login, register, loginDemo, logout }}>
+    <SessionContext.Provider value={{ session, ready, signedOut, login, register, loginDemo, acceptTerms, updateAvatar, logout }}>
       {children}
     </SessionContext.Provider>
   );
@@ -131,5 +169,7 @@ export const RequireRole: React.FC<{ role: Role; children: React.ReactNode }> = 
     return <Navigate to={`/entrar?perfil=${role === 'psychologist' ? 'psicologo' : 'funcionario'}`} replace />;
   }
   if (session.role !== role) return <Navigate to={HOME_BY_ROLE[session.role]} replace />;
+  // Nothing of the app is shown before the current terms are accepted
+  if (!session.termsAccepted) return <TermsGate />;
   return <>{children}</>;
 };

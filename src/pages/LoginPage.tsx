@@ -3,7 +3,10 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { errorMessage } from '../api/client';
 import { DemoAccount, HOME_BY_ROLE, RegisterInput, Role, useSession } from '../auth/session';
 import { PRICING, formatBRL } from '../config/pricing';
+import { AccessibilityButton } from '../components/AccessibilityButton';
 import { Logo } from '../components/Logo';
+import { Acceptance, TermsAcceptance, isAcceptanceComplete } from '../components/TermsAcceptance';
+import { TermsModal } from '../components/TermsModal';
 
 type Mode = 'login' | 'register';
 
@@ -20,7 +23,7 @@ const PANEL: Record<Role, { title: string; text: string; icon: string }> = {
   },
   psychologist: {
     title: 'Sua agenda, seus pacientes',
-    text: `Atenda funcionários das empresas parceiras em horários recorrentes. ${formatBRL(PRICING.psychologistMonthly)} por mês, com repasse por sessão realizada.`,
+    text: `Atenda funcionários das empresas parceiras em horários recorrentes, com repasse de ${formatBRL(PRICING.sessionPayout)} por sessão realizada.`,
     icon: 'calendar_month',
   },
 };
@@ -61,6 +64,8 @@ export const LoginPage: React.FC = () => {
   );
   const [form, setForm] = useState({ name: '', email: '', password: '', companyCode: '', reg: '', title: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptance, setAcceptance] = useState<Acceptance>({ terms: false, healthData: false });
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,8 +92,8 @@ export const LoginPage: React.FC = () => {
         const base = { name: form.name.trim(), email: form.email.trim(), password: form.password };
         const input: RegisterInput =
           role === 'employee'
-            ? { ...base, role, companyCode: form.companyCode.trim() }
-            : { ...base, role, reg: form.reg.trim(), title: form.title.trim() };
+            ? { ...base, acceptance, role, companyCode: form.companyCode.trim() }
+            : { ...base, acceptance, role, reg: form.reg.trim(), title: form.title.trim() };
         user = await register(input);
       }
       navigate(HOME_BY_ROLE[user.role], { replace: true });
@@ -115,10 +120,13 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] font-outfit grid lg:grid-cols-2">
       {/* Formulário */}
-      <div className="flex flex-col px-4 sm:px-8 py-6">
-        <Link to="/" className="self-start flex items-center gap-2.5 rounded-lg">
-          <Logo variant="horizontal" size={40} />
-        </Link>
+      <div className="flex flex-col min-w-0 px-4 sm:px-8 py-6">
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/" className="flex items-center gap-2.5 rounded-lg">
+            <Logo variant="horizontal" size={40} />
+          </Link>
+          <AccessibilityButton />
+        </div>
 
         <form onSubmit={handleSubmit} className="w-full max-w-sm mx-auto my-auto py-10 flex flex-col gap-5">
           <div>
@@ -148,7 +156,7 @@ export const LoginPage: React.FC = () => {
                       isSelected ? 'bg-white text-[#5516be] shadow-sm' : 'text-[#494454] hover:text-[#0b1c30]'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">{option.icon}</span>
+                    <span className="material-symbols-outlined text-[1.25rem]">{option.icon}</span>
                     {option.label}
                   </button>
                 );
@@ -193,7 +201,7 @@ export const LoginPage: React.FC = () => {
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 className="absolute inset-y-0 right-1 my-auto w-10 h-10 rounded-full flex items-center justify-center text-[#494454] hover:bg-[#eff4ff]"
               >
-                <span className="material-symbols-outlined text-[20px]">
+                <span className="material-symbols-outlined text-[1.375rem]">
                   {showPassword ? 'visibility_off' : 'visibility'}
                 </span>
               </button>
@@ -241,19 +249,28 @@ export const LoginPage: React.FC = () => {
             </>
           )}
 
+          {isRegister && (
+            <TermsAcceptance
+              role={role}
+              value={acceptance}
+              onChange={setAcceptance}
+              onReadTerms={() => setIsTermsOpen(true)}
+            />
+          )}
+
           {error && (
             <p role="alert" className="p-3 rounded-2xl bg-[#ffdad6]/60 text-sm text-[#93000a] flex items-start gap-2">
-              <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+              <span className="material-symbols-outlined text-[1.25rem] shrink-0">error</span>
               {error}
             </p>
           )}
 
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="h-12 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-70 disabled:active:scale-100"
+            disabled={isSubmitting || (isRegister && !isAcceptanceComplete(acceptance, role))}
+            className="h-12 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:bg-[#cbc3d7] disabled:active:scale-100"
           >
-            <span className={`material-symbols-outlined text-[20px] ${isSubmitting ? 'animate-spin' : ''}`}>
+            <span className={`material-symbols-outlined text-[1.375rem] ${isSubmitting ? 'animate-spin' : ''}`}>
               {isSubmitting ? 'progress_activity' : 'login'}
             </span>
             {isSubmitting ? 'Aguarde...' : isRegister ? 'Criar conta' : 'Entrar'}
@@ -283,16 +300,16 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => handleDemo(account.id)}
-                  className="h-14 px-3 rounded-2xl bg-white border border-[#e5eeff] hover:border-[#6b38d4]/40 hover:bg-[#fbf9ff] text-left flex items-center gap-3 transition-colors disabled:opacity-60"
+                  className="min-h-14 py-1.5 px-3 rounded-2xl bg-white border border-[#e5eeff] hover:border-[#6b38d4]/40 hover:bg-[#fbf9ff] text-left flex items-center gap-3 transition-colors disabled:opacity-60"
                 >
                   <span className="w-9 h-9 rounded-full bg-[#e9ddff]/70 text-[#5516be] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[20px]">{account.icon}</span>
+                    <span className="material-symbols-outlined text-[1.375rem]">{account.icon}</span>
                   </span>
                   <span className="flex flex-col min-w-0 flex-1">
                     <span className="text-sm font-semibold text-[#0b1c30]">{account.label}</span>
                     <span className="text-xs text-[#494454] truncate">{account.detail}</span>
                   </span>
-                  <span className="material-symbols-outlined text-[18px] text-[#7b7486]">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[1.25rem] text-[#7b7486]">arrow_forward</span>
                 </button>
               ))}
             </div>
@@ -300,12 +317,14 @@ export const LoginPage: React.FC = () => {
         </form>
       </div>
 
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+
       {/* Painel da marca */}
       <div className="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-[#6b38d4] to-[#0051d5] text-white items-center justify-center p-12">
         <div className="absolute -right-24 -bottom-24 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-md text-center flex flex-col items-center gap-4">
           <span className="w-20 h-20 rounded-3xl bg-white/15 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[44px]">{PANEL[role].icon}</span>
+            <span className="material-symbols-outlined text-[3rem]">{PANEL[role].icon}</span>
           </span>
           <h2 className="font-sora text-3xl font-bold tracking-tight">{PANEL[role].title}</h2>
           <p className="text-lg text-white/85 leading-relaxed">{PANEL[role].text}</p>
