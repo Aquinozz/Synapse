@@ -1,4 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
+import { errorMessage } from '../api/client';
+import { CheckinResult } from '../areas/employee/checkin';
+import { scrollPageToTop } from '../utils/scroll';
+import { AccessibilityButton } from './AccessibilityButton';
 import { Logo } from './Logo';
 import { sound } from '../utils/audio';
 import { getWellnessStatus } from '../utils/wellness';
@@ -7,8 +11,14 @@ import { useEmployeePlan } from '../areas/employee/plan';
 import { formatDayTime } from '../utils/schedule';
 
 interface AssessmentScreenProps {
-  onBack: () => void;
-  onFinish: (newScore: number) => void;
+  /** Leaves without finishing (back arrow, "save for later", "skip") */
+  onLeave: () => void;
+  /** Today's check-in was not done yet, so it can be skipped; false when the person is repeating it */
+  canSkip: boolean;
+  /** Saves the index of the day; rejects with an ApiError */
+  onSubmit: (score: number) => Promise<CheckinResult>;
+  /** Leaves after the result was shown */
+  onFinish: () => void;
   onOpenSOS: () => void;
 }
 
@@ -146,7 +156,7 @@ const clearDraft = () => {
   }
 };
 
-export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFinish, onOpenSOS }) => {
+export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onLeave, canSkip, onSubmit, onFinish, onOpenSOS }) => {
   const showToast = useToast();
   const { therapist, next, now } = useEmployeePlan();
   const [draft] = useState(loadDraft);
@@ -158,13 +168,8 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
   const [isCompleted, setIsCompleted] = useState(false);
   const [customFactorInput, setCustomFactorInput] = useState('');
   const [showAddFactor, setShowAddFactor] = useState(false);
-  const submitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (submitTimer.current) clearTimeout(submitTimer.current);
-    };
-  }, []);
+  // Name of the psychologist told about a very low index, once the check-in is saved
+  const [alertedPsychologist, setAlertedPsychologist] = useState<string | null>(null);
 
   const step = STEPS[stepIndex];
   const stepAnswers = answers[step.id] ?? [];
@@ -207,30 +212,37 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
     sound.playChime('click');
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     sound.playChime('click');
     if (!isLastStep) {
       setStepIndex(stepIndex + 1);
-      window.scrollTo({ top: 0 });
+      scrollPageToTop();
       return;
     }
 
     setIsSubmitting(true);
-    submitTimer.current = setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const result = await onSubmit(calculateFinalScore());
+      setAlertedPsychologist(result.alerted ? result.psychologistName : null);
       setIsCompleted(true);
       clearDraft();
       sound.playChime('success');
-      window.scrollTo({ top: 0 });
-    }, 700);
+      scrollPageToTop();
+    } catch (err) {
+      showToast(errorMessage(err), 'info');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
     if (stepIndex > 0 && !isCompleted) {
       setStepIndex(stepIndex - 1);
-      window.scrollTo({ top: 0 });
+      scrollPageToTop();
+    } else if (isCompleted) {
+      onFinish();
     } else {
-      onBack();
+      onLeave();
     }
   };
 
@@ -243,7 +255,13 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
     } catch {
       showToast('Não foi possível salvar o progresso neste navegador.', 'info');
     }
-    onBack();
+    onLeave();
+  };
+
+  const handleSkip = () => {
+    sound.playChime('click');
+    showToast('Check-in pulado por hoje. Você pode fazer quando quiser, pelo Início.', 'info');
+    onLeave();
   };
 
   const calculateFinalScore = () => {
@@ -271,7 +289,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
               aria-label={stepIndex > 0 && !isCompleted ? 'Voltar para a etapa anterior' : 'Sair do check-in'}
               className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-[#0b1c30] hover:bg-[#eff4ff] active:bg-[#dce9ff] transition-colors"
             >
-              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+              <span className="material-symbols-outlined text-[1.6875rem]">arrow_back</span>
             </button>
             <Logo size={28} className="hidden xs:block" />
             <h1 className="font-sora text-base sm:text-lg text-[#0b1c30] font-bold tracking-tight truncate">
@@ -279,11 +297,14 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
             </h1>
           </div>
 
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#dbe1ff]/60 shrink-0">
-            <span className="material-symbols-outlined text-[14px] text-[#003ea8]">lock</span>
-            <span className="font-outfit text-[11px] leading-none text-[#003ea8] font-semibold">
-              100% anônimo
-            </span>
+          <div className="flex items-center gap-1 shrink-0">
+            <div title="Sua empresa não vê o seu resultado" className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#dbe1ff]/60 shrink-0">
+              <span className="material-symbols-outlined text-[1rem] text-[#003ea8]">lock</span>
+              <span className="hidden xs:inline font-outfit text-2xs leading-none text-[#003ea8] font-semibold">
+                Sua empresa não vê
+              </span>
+            </div>
+            <AccessibilityButton />
           </div>
         </div>
       </header>
@@ -293,7 +314,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
         {isCompleted ? (
           <div className="card !p-6 sm:!p-8 flex flex-col items-center text-center my-auto animate-pop-in">
             <div className="w-16 h-16 rounded-full bg-[#f5fff6] text-[#00855b] flex items-center justify-center shadow-inner mb-3">
-              <span className="material-symbols-outlined text-[36px] fill-1">verified</span>
+              <span className="material-symbols-outlined text-[2.5rem] fill-1">verified</span>
             </div>
 
             <span className="font-outfit text-xs font-bold uppercase tracking-wider text-[#00855b]">
@@ -315,9 +336,19 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                 </span>
               </div>
               <p className="font-outfit text-sm text-[#0b1c30] leading-relaxed">
-                Suas respostas entram de forma 100% anônima no índice geral da empresa. Ninguém vê o que você respondeu individualmente.
+                Guardamos só o índice do dia, não as respostas. A sua empresa não vê o seu resultado.
               </p>
             </div>
+
+            {alertedPsychologist && (
+              <p className="-mt-2 mb-5 p-3 rounded-2xl bg-[#fff8e8] border border-[#ffd8a8] w-full text-left font-outfit text-sm text-[#7a4100] leading-snug flex items-start gap-2">
+                <span className="material-symbols-outlined text-[1.25rem] shrink-0">notifications</span>
+                <span>
+                  Como o índice de hoje ficou muito baixo, <strong className="font-semibold">avisamos {alertedPsychologist}</strong>,
+                  para que possa cuidar de você.
+                </span>
+              </p>
+            )}
 
             <div className="w-full flex flex-col gap-2 mb-5 text-left">
               <span className="font-sora text-xs font-bold text-[#0b1c30] uppercase tracking-wider">
@@ -328,17 +359,17 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                   onClick={onOpenSOS}
                   className="p-3 bg-[#ffdad6]/50 hover:bg-[#ffdad6] rounded-xl border border-[#ffdad6] text-sm text-[#93000a] flex items-center gap-2 text-left transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[20px] fill-1 shrink-0">shield_with_heart</span>
+                  <span className="material-symbols-outlined text-[1.375rem] fill-1 shrink-0">shield_with_heart</span>
                   <span className="flex-1">Você não precisa passar por isso sozinho(a). Fale agora com um plantonista, em sigilo.</span>
-                  <span className="material-symbols-outlined text-[18px] shrink-0">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[1.25rem] shrink-0">arrow_forward</span>
                 </button>
               )}
               <div className="p-3 bg-[#f8f9ff] rounded-xl border border-[#e5eeff] text-sm text-[#494454] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#00855b] text-[20px] shrink-0">spa</span>
+                <span className="material-symbols-outlined text-[#00855b] text-[1.375rem] shrink-0">spa</span>
                 <span>Faça uma pausa de respiração 4-7-8 antes das 18h.</span>
               </div>
               <div className="p-3 bg-[#f8f9ff] rounded-xl border border-[#e5eeff] text-sm text-[#494454] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#6b38d4] text-[20px] shrink-0">event_available</span>
+                <span className="material-symbols-outlined text-[#6b38d4] text-[1.375rem] shrink-0">event_available</span>
                 <span>
                   {therapist && next
                     ? `Sua próxima sessão com ${therapist.name}: ${formatDayTime(next, now).toLowerCase()}.${
@@ -350,7 +381,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
             </div>
 
             <button
-              onClick={() => onFinish(finalScore)}
+              onClick={onFinish}
               className="w-full h-12 min-h-12 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-bold transition-all active:scale-[0.98]"
             >
               Voltar ao início
@@ -430,7 +461,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                             {opt.title}
                           </span>
                           {opt.badge && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#ba1a1a] text-white font-outfit text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-full bg-[#ba1a1a] text-white font-outfit text-3xs font-bold">
                               {opt.badge}
                             </span>
                           )}
@@ -447,7 +478,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                       } ${isSelected ? 'bg-[#6b38d4]' : 'bg-white border-2 border-[#cbc3d7]'}`}
                     >
                       {isSelected && (
-                        <span className="material-symbols-outlined text-[16px] text-white">check</span>
+                        <span className="material-symbols-outlined text-[1.125rem] text-white">check</span>
                       )}
                     </span>
                   </button>
@@ -477,7 +508,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                 <div className="card flex flex-col gap-3">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#6b38d4] text-[22px] fill-1">bolt</span>
+                      <span className="material-symbols-outlined text-[#6b38d4] text-[1.5rem] fill-1">bolt</span>
                       <h3 id="energy-label" className="font-sora text-base text-[#0b1c30] font-semibold">
                         Nível de energia
                       </h3>
@@ -524,7 +555,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                   </div>
 
                   <div className="bg-[#eff4ff] p-3 rounded-2xl flex items-center gap-2 border border-[#dce9ff]">
-                    <span className="material-symbols-outlined text-[20px] text-[#6b38d4] shrink-0">
+                    <span className="material-symbols-outlined text-[1.375rem] text-[#6b38d4] shrink-0">
                       {energyDetails.icon}
                     </span>
                     <p className="font-outfit text-sm text-[#0b1c30] leading-snug">{energyDetails.feedback}</p>
@@ -554,7 +585,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                           }`}
                         >
                           <span
-                            className={`material-symbols-outlined text-[18px] ${
+                            className={`material-symbols-outlined text-[1.25rem] ${
                               isSelected ? 'fill-1' : 'text-[#494454]'
                             }`}
                           >
@@ -577,7 +608,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                           className="h-11 px-4 rounded-full bg-[#6b38d4] text-white active:scale-95 transition-all flex items-center gap-1.5 font-outfit text-sm font-semibold"
                         >
                           <span>{custom}</span>
-                          <span className="material-symbols-outlined text-[16px]">close</span>
+                          <span className="material-symbols-outlined text-[1.125rem]">close</span>
                         </button>
                       ))}
 
@@ -610,7 +641,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                         onClick={() => setShowAddFactor(true)}
                         className="h-11 px-4 rounded-full bg-[#eff4ff] text-[#5516be] hover:bg-[#e5eeff] text-sm font-outfit font-semibold flex items-center gap-1 transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
+                        <span className="material-symbols-outlined text-[1.25rem]">add</span>
                         <span>Outro fator</span>
                       </button>
                     )}
@@ -621,11 +652,11 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
 
             {/* Privacy note */}
             <div className="bg-[#eff4ff] rounded-2xl p-4 flex items-start gap-3 border border-[#dce9ff]">
-              <span className="material-symbols-outlined text-[20px] text-[#0051d5] fill-1 shrink-0">
+              <span className="material-symbols-outlined text-[1.375rem] text-[#0051d5] fill-1 shrink-0">
                 enhanced_encryption
               </span>
               <p className="font-outfit text-sm text-[#494454] leading-snug">
-                Suas respostas individuais <strong>nunca são compartilhadas com o RH ou com gestores</strong>. Elas compõem apenas índices gerais e anônimos.
+                Suas respostas <strong>nunca são compartilhadas com o RH ou com gestores</strong>. Guardamos só o índice do dia; se ele ficar muito baixo, o seu psicólogo é avisado para poder ajudar.
               </p>
             </div>
           </div>
@@ -644,8 +675,8 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
             >
               {isSubmitting ? (
                 <>
-                  <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
-                  <span>Registrando com criptografia...</span>
+                  <span className="material-symbols-outlined text-[1.375rem] animate-spin">progress_activity</span>
+                  <span>Registrando...</span>
                 </>
               ) : (
                 <>
@@ -657,7 +688,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
                       : 'Continuar'}
                   </span>
                   {canContinue && (
-                    <span className="material-symbols-outlined text-[20px]">
+                    <span className="material-symbols-outlined text-[1.375rem]">
                       {isLastStep ? 'check' : 'arrow_forward'}
                     </span>
                   )}
@@ -665,14 +696,26 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ onBack, onFi
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={handleSaveLater}
-              className="w-full h-10 rounded-full hover:bg-[#eff4ff] text-[#494454] hover:text-[#0b1c30] font-outfit text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
-            >
-              <span className="material-symbols-outlined text-[18px]">bookmark</span>
-              <span>Salvar e continuar depois</span>
-            </button>
+            <div className="flex flex-wrap gap-x-2">
+              <button
+                type="button"
+                onClick={handleSaveLater}
+                className="flex-1 basis-32 min-h-10 px-3 py-1 rounded-full hover:bg-[#eff4ff] text-[#494454] hover:text-[#0b1c30] font-outfit text-sm font-medium leading-tight transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[1.25rem]">bookmark</span>
+                <span>Continuar depois</span>
+              </button>
+              {canSkip && (
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className="flex-1 basis-32 min-h-10 px-3 py-1 rounded-full hover:bg-[#eff4ff] text-[#494454] hover:text-[#0b1c30] font-outfit text-sm font-medium leading-tight transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[1.25rem]">skip_next</span>
+                  <span>Pular por hoje</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

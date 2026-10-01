@@ -3,6 +3,8 @@ import { Avatar } from '../../components/Avatar';
 import { PRICING, formatBRL } from '../../config/pricing';
 import { Patient, countSessionsHeld } from '../../data/psychologistMock';
 import { Therapist } from '../../types';
+import { PatientTab } from './PatientModal';
+import { CheckinAlert, Evaluation, formatSessionDay, sessionsToEvaluate } from './evaluations';
 import { PatientNotes } from './notes';
 import {
   WEEKDAYS,
@@ -17,7 +19,11 @@ interface PsiHomeScreenProps {
   patients: Patient[];
   openSlotCount: number;
   notes: PatientNotes;
-  onOpenPatient: (patient: Patient) => void;
+  evaluations: Evaluation[];
+  /** Patients whose daily check-in came out very low */
+  alerts: CheckinAlert[];
+  onDismissAlert: (patientId: number) => void;
+  onOpenPatient: (patient: Patient, tab?: PatientTab, day?: string) => void;
   onJoin: (patient: Patient) => void;
   onOpenAgenda: () => void;
 }
@@ -29,6 +35,9 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
   patients,
   openSlotCount,
   notes,
+  evaluations,
+  alerts,
+  onDismissAlert,
   onOpenPatient,
   onJoin,
   onOpenAgenda,
@@ -47,6 +56,8 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
   const listDay = todays.length > 0 || nextDay === undefined ? today : nextDay;
   const listed = patients.filter((p) => p.weekday === listDay).sort((a, b) => a.time.localeCompare(b.time));
   const isListToday = listDay === today;
+
+  const toEvaluate = sessionsToEvaluate(patients, evaluations, now);
 
   const doneThisMonth = countSessionsHeld(patients, startOfMonth(now), now);
 
@@ -72,10 +83,60 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
 
       {profile.status === 'pending' && (
         <section className="rounded-3xl p-4 bg-[#fff8e8] border border-[#ffd8a8] flex items-start gap-3">
-          <span className="material-symbols-outlined text-[20px] text-[#7a4100] shrink-0">hourglass_top</span>
+          <span className="material-symbols-outlined text-[1.375rem] text-[#7a4100] shrink-0">hourglass_top</span>
           <p className="font-outfit text-sm text-[#494454] leading-snug">
             <strong className="text-[#7a4100] font-semibold">Registro em análise.</strong> Estamos conferindo o seu {profile.reg}. Enquanto isso, monte o perfil e abra os horários; os funcionários passam a ver você assim que a conferência terminar.
           </p>
+        </section>
+      )}
+
+      {alerts.length > 0 && (
+        <section role="alert" className="card !border-[#ffb4ab] !bg-[#fff5f3]">
+          <h2 className="font-sora text-base lg:text-lg font-bold text-[#93000a] flex items-center gap-2">
+            <span className="material-symbols-outlined text-[1.375rem] fill-1">notifications</span>
+            {alerts.length === 1 ? 'Um paciente precisa de atenção' : `${alerts.length} pacientes precisam de atenção`}
+          </h2>
+          <p className="font-outfit text-sm text-[#494454] mb-3">
+            O check-in diário destes pacientes ficou muito baixo.
+          </p>
+          <ul className="flex flex-col gap-2">
+            {alerts.map((alert) => {
+              const patient = patients.find((p) => p.id === alert.patientId);
+              return (
+                <li
+                  key={alert.patientId}
+                  className="p-3 rounded-2xl bg-white border border-[#ffdad6] flex items-center gap-3 flex-wrap"
+                >
+                  <Avatar name={alert.name} image={alert.avatar} />
+                  <div className="flex flex-col min-w-0 flex-1 basis-40">
+                    <span className="font-outfit text-sm font-semibold text-[#0b1c30]">{alert.name}</span>
+                    <span className="font-outfit text-xs text-[#494454]">
+                      Check-in de {formatSessionDay(alert.day)}: índice{' '}
+                      <strong className="text-[#ba1a1a]">{alert.score} de 100</strong>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {patient && (
+                      <button
+                        onClick={() => onOpenPatient(patient)}
+                        aria-label={`Ver paciente ${alert.name}`}
+                        className="min-h-10 px-4 py-1 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold transition-colors"
+                      >
+                        Ver paciente
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onDismissAlert(alert.patientId)}
+                      aria-label={`Marcar o alerta de ${alert.name} como visto`}
+                      className="min-h-10 px-4 py-1 rounded-full bg-[#ba1a1a] hover:bg-[#93000a] text-white font-outfit text-sm font-semibold transition-colors"
+                    >
+                      Marcar como visto
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
 
@@ -84,7 +145,7 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
           <div key={s.label} className={`rounded-2xl p-4 flex flex-col gap-1 ${s.tone}`}>
             <div className="flex items-center justify-between gap-2">
               <span className="font-outfit text-xs font-semibold opacity-90">{s.label}</span>
-              <span className="material-symbols-outlined text-[18px] opacity-80">{s.icon}</span>
+              <span className="material-symbols-outlined text-[1.25rem] opacity-80">{s.icon}</span>
             </div>
             <span className="font-sora text-2xl lg:text-3xl font-bold text-[#0b1c30] tracking-tight tabular-nums">
               {s.value}
@@ -93,6 +154,39 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
           </div>
         ))}
       </section>
+
+      {toEvaluate.length > 0 && (
+        <section className="card !border-[#ffd8a8] !bg-[#fffaf0]">
+          <h2 className="font-sora text-base lg:text-lg font-bold text-[#0b1c30] flex items-center gap-2">
+            <span className="material-symbols-outlined text-[1.375rem] text-[#7a4100]">rate_review</span>
+            Sessões para avaliar
+          </h2>
+          <p className="font-outfit text-sm text-[#494454] mb-3">
+            Dê uma nota a cada sessão para acompanhar a evolução do paciente.
+          </p>
+          <ul className="flex flex-col gap-2">
+            {toEvaluate.map(({ patient, day }) => (
+              <li
+                key={`${patient.id}-${day}`}
+                className="p-3 rounded-2xl bg-white border border-[#e5eeff] flex items-center gap-3 flex-wrap"
+              >
+                <Avatar name={patient.name} image={patient.avatar} />
+                <div className="flex flex-col min-w-0 flex-1 basis-32">
+                  <span className="font-outfit text-sm font-semibold text-[#0b1c30]">{patient.name}</span>
+                  <span className="font-outfit text-xs text-[#494454]">Sessão de {formatSessionDay(day)}</span>
+                </div>
+                <button
+                  onClick={() => onOpenPatient(patient, 'evolution', day)}
+                  aria-label={`Avaliar sessão de ${formatSessionDay(day)} com ${patient.name}`}
+                  className="min-h-10 px-4 py-1 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
+                >
+                  Avaliar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card">
         <div className="flex items-center justify-between gap-2 mb-3">
@@ -126,10 +220,10 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
                   isLive ? 'border-[#6b38d4]/40 bg-[#fbf9ff]' : 'border-[#e5eeff]'
                 }`}
               >
-                <span className="w-12 font-sora text-sm font-bold text-[#0051d5] tabular-nums shrink-0">
+                <span className="min-w-12 font-sora text-sm font-bold text-[#0051d5] tabular-nums shrink-0">
                   {patient.time}
                 </span>
-                <Avatar name={patient.name} />
+                <Avatar name={patient.name} image={patient.avatar} />
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="font-outfit text-sm font-semibold text-[#0b1c30]">{patient.name}</span>
                   <span className="font-outfit text-xs text-[#494454]">
@@ -138,13 +232,13 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
                   </span>
                   {pinned && (
                     <span className="font-outfit text-xs text-[#7a4100] flex items-start gap-1 mt-0.5">
-                      <span className="material-symbols-outlined text-[14px] fill-1 shrink-0">push_pin</span>
+                      <span className="material-symbols-outlined text-[1rem] fill-1 shrink-0">push_pin</span>
                       <span className="line-clamp-2">{pinned.text}</span>
                     </span>
                   )}
                 </div>
                 <span
-                  className={`px-2.5 py-1 rounded-full font-outfit text-[11px] font-semibold shrink-0 ${
+                  className={`px-2.5 py-1 rounded-full font-outfit text-2xs font-semibold shrink-0 ${
                     isOver
                       ? 'bg-[#eff4ff] text-[#494454]'
                       : isLive
@@ -155,11 +249,11 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
                   {isOver ? 'Realizada' : isLive ? 'Agora' : 'Confirmada'}
                 </span>
                 <button
-                  onClick={() => onOpenPatient(patient)}
+                  onClick={() => onOpenPatient(patient, 'notes')}
                   aria-label={`Anotações de ${patient.name}`}
                   className="h-10 px-3 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold transition-colors flex items-center gap-1.5 shrink-0"
                 >
-                  <span className="material-symbols-outlined text-[18px]">sticky_note_2</span>
+                  <span className="material-symbols-outlined text-[1.25rem]">sticky_note_2</span>
                   <span>Anotações</span>
                 </button>
                 {isListToday && !isOver && (
@@ -171,7 +265,7 @@ export const PsiHomeScreen: React.FC<PsiHomeScreenProps> = ({
                         : 'bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be]'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">video_camera_front</span>
+                    <span className="material-symbols-outlined text-[1.25rem]">video_camera_front</span>
                     <span>Abrir sala</span>
                   </button>
                 )}

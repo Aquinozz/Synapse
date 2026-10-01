@@ -3,7 +3,9 @@ import { Link } from 'react-router';
 import { HOME_BY_ROLE, useSession } from '../auth/session';
 import { PRICING, formatBRL } from '../config/pricing';
 import { IMAGES } from '../constants/images';
+import { AccessibilityButton } from '../components/AccessibilityButton';
 import { Logo } from '../components/Logo';
+import { TermsModal } from '../components/TermsModal';
 import { Modal, ModalCloseButton } from '../components/Modal';
 import { useToast } from '../components/Toast';
 
@@ -40,6 +42,12 @@ const PSYCHOLOGIST_BENEFITS = [
   `Repasse de ${formatBRL(PRICING.sessionPayout)} por sessão realizada`,
 ];
 
+const PSYCHOLOGIST_STEPS = [
+  'Crie sua conta com o seu CRP.',
+  'Conferimos o seu registro e liberamos o seu perfil.',
+  'Abra os horários que quer atender e receba os pacientes.',
+];
+
 const PRIVACY_POINTS = [
   {
     icon: 'visibility_off',
@@ -73,22 +81,20 @@ const FAQ = [
   },
   {
     q: 'Sou psicólogo. Como funciona para mim?',
-    a: `Você paga ${formatBRL(PRICING.psychologistMonthly)} por mês para estar na plataforma, abre os horários que quiser atender e recebe um repasse por cada sessão realizada.`,
+    a: 'Você cria a conta com o seu CRP, abre os horários que quiser atender e recebe um repasse por cada sessão realizada.',
   },
 ];
 
 const MIN_EMPLOYEES = 5;
 const MAX_EMPLOYEES = 500;
-const SESSIONS_PER_PATIENT_MONTH = 4;
 
 export const LandingPage: React.FC = () => {
   const { session } = useSession();
   const [employees, setEmployees] = useState(50);
-  const [weeklyPatients, setWeeklyPatients] = useState(12);
   const [isLeadOpen, setIsLeadOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
 
   const monthlyTotal = employees * PRICING.companyPerEmployee;
-  const monthlyPayout = weeklyPatients * SESSIONS_PER_PATIENT_MONTH * PRICING.sessionPayout;
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] font-outfit overflow-x-clip">
@@ -112,12 +118,15 @@ export const LandingPage: React.FC = () => {
             ))}
           </nav>
 
-          <Link
-            to={session ? HOME_BY_ROLE[session.role] : '/entrar'}
-            className="h-10 px-5 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white text-sm font-semibold flex items-center transition-colors shrink-0"
-          >
-            {session ? 'Abrir o app' : 'Entrar'}
-          </Link>
+          <div className="flex items-center gap-1 shrink-0">
+            <AccessibilityButton />
+            <Link
+              to={session ? HOME_BY_ROLE[session.role] : '/entrar'}
+              className="h-10 px-5 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white text-sm font-semibold flex items-center transition-colors shrink-0"
+            >
+              {session ? 'Abrir o app' : 'Entrar'}
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -140,7 +149,7 @@ export const LandingPage: React.FC = () => {
                 className="h-13 px-7 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
               >
                 Quero para minha empresa
-                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[1.375rem]">arrow_forward</span>
               </button>
               <a
                 href="#psicologos"
@@ -152,7 +161,7 @@ export const LandingPage: React.FC = () => {
             <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#494454]">
               {['CRP verificado', 'Conforme a LGPD', 'Vídeo criptografado'].map((item) => (
                 <li key={item} className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px] text-[#006947]">check_circle</span>
+                  <span className="material-symbols-outlined text-[1.25rem] text-[#006947]">check_circle</span>
                   {item}
                 </li>
               ))}
@@ -165,7 +174,7 @@ export const LandingPage: React.FC = () => {
             <div className="relative card !p-5 lg:!p-6 flex flex-col gap-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <span className="font-sora text-base font-bold">Sua sessão da semana</span>
-                <span className="px-2.5 py-1 rounded-full bg-[#6ffbbe]/30 text-[#005236] text-[11px] font-semibold">
+                <span className="px-2.5 py-1 rounded-full bg-[#6ffbbe]/30 text-[#005236] text-2xs font-semibold">
                   Confirmada
                 </span>
               </div>
@@ -186,13 +195,13 @@ export const LandingPage: React.FC = () => {
                   ['Dias ativos', '6 de 7', 'bg-[#ffe9c7]/70'],
                 ].map(([label, value, tone]) => (
                   <div key={label} className={`rounded-2xl p-3 ${tone}`}>
-                    <div className="text-[11px] text-[#494454] font-medium">{label}</div>
+                    <div className="text-2xs text-[#494454] font-medium">{label}</div>
                     <div className="font-sora text-base font-bold">{value}</div>
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#eff4ff] text-xs text-[#494454]">
-                <span className="material-symbols-outlined text-[18px] text-[#0051d5] fill-1">verified_user</span>
+                <span className="material-symbols-outlined text-[1.25rem] text-[#0051d5] fill-1">verified_user</span>
                 100% anônimo para a empresa
               </div>
             </div>
@@ -213,7 +222,7 @@ export const LandingPage: React.FC = () => {
                 <li key={step.title} className="rounded-3xl p-6 bg-[#f8f9ff] border border-[#e5eeff] flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="w-12 h-12 rounded-2xl bg-[#e9ddff] text-[#6b38d4] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[26px]">{step.icon}</span>
+                      <span className="material-symbols-outlined text-[1.8125rem]">{step.icon}</span>
                     </span>
                     <span className="font-sora text-3xl font-bold text-[#dce9ff]">{idx + 1}</span>
                   </div>
@@ -238,7 +247,7 @@ export const LandingPage: React.FC = () => {
             <ul className="flex flex-col gap-2.5 mt-1">
               {COMPANY_BENEFITS.map((benefit) => (
                 <li key={benefit} className="flex items-start gap-2 text-sm lg:text-base">
-                  <span className="material-symbols-outlined text-[20px] text-[#006947] shrink-0">check_circle</span>
+                  <span className="material-symbols-outlined text-[1.375rem] text-[#006947] shrink-0">check_circle</span>
                   {benefit}
                 </li>
               ))}
@@ -304,7 +313,7 @@ export const LandingPage: React.FC = () => {
               <ul className="flex flex-col gap-2.5 mt-1">
                 {PSYCHOLOGIST_BENEFITS.map((benefit) => (
                   <li key={benefit} className="flex items-start gap-2 text-sm lg:text-base">
-                    <span className="material-symbols-outlined text-[20px] text-[#6ffbbe] shrink-0">check_circle</span>
+                    <span className="material-symbols-outlined text-[1.375rem] text-[#6ffbbe] shrink-0">check_circle</span>
                     {benefit}
                   </li>
                 ))}
@@ -312,47 +321,18 @@ export const LandingPage: React.FC = () => {
             </div>
 
             <div className="rounded-3xl p-6 lg:p-8 bg-white text-[#0b1c30] flex flex-col gap-5 shadow-xl">
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="font-sora text-5xl font-bold tracking-tight">
-                  {formatBRL(PRICING.psychologistMonthly)}
-                </span>
-                <span className="text-base text-[#494454]">por mês</span>
-              </div>
+              <h3 className="font-sora text-xl lg:text-2xl font-bold tracking-tight">Como começar</h3>
 
-              <div className="flex flex-col gap-2">
-                <label htmlFor="patients" className="text-sm font-semibold flex items-center justify-between">
-                  Pacientes por semana
-                  <span className="font-sora text-lg font-bold text-[#6b38d4] tabular-nums">{weeklyPatients}</span>
-                </label>
-                <input
-                  id="patients"
-                  type="range"
-                  min={1}
-                  max={30}
-                  value={weeklyPatients}
-                  onChange={(e) => setWeeklyPatients(Number(e.target.value))}
-                  className="w-full accent-[#6b38d4] h-11 cursor-pointer"
-                />
-              </div>
-
-              <dl className="flex flex-col gap-2 text-sm" aria-live="polite">
-                <div className="flex items-center justify-between">
-                  <dt className="text-[#494454]">
-                    Repasse ({weeklyPatients * SESSIONS_PER_PATIENT_MONTH} sessões × {formatBRL(PRICING.sessionPayout)})
-                  </dt>
-                  <dd className="font-semibold tabular-nums">{formatBRL(monthlyPayout)}</dd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-[#494454]">Mensalidade</dt>
-                  <dd className="font-semibold tabular-nums">− {formatBRL(PRICING.psychologistMonthly)}</dd>
-                </div>
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-[#eff4ff] mt-1">
-                  <dt>Estimativa por mês</dt>
-                  <dd className="font-sora text-2xl font-bold tabular-nums">
-                    {formatBRL(monthlyPayout - PRICING.psychologistMonthly)}
-                  </dd>
-                </div>
-              </dl>
+              <ol className="flex flex-col gap-3 text-sm lg:text-base text-[#494454]">
+                {PSYCHOLOGIST_STEPS.map((step, index) => (
+                  <li key={step} className="flex items-start gap-3">
+                    <span className="w-7 h-7 rounded-full bg-[#e9ddff] text-[#5516be] font-sora text-sm font-bold flex items-center justify-center shrink-0">
+                      {index + 1}
+                    </span>
+                    <span className="pt-0.5">{step}</span>
+                  </li>
+                ))}
+              </ol>
 
               <Link
                 to="/entrar?perfil=psicologo&criar"
@@ -378,7 +358,7 @@ export const LandingPage: React.FC = () => {
             {PRIVACY_POINTS.map((point) => (
               <div key={point.title} className="card flex flex-col gap-2">
                 <span className="w-11 h-11 rounded-2xl bg-[#dbe1ff]/70 text-[#0051d5] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[24px]">{point.icon}</span>
+                  <span className="material-symbols-outlined text-[1.6875rem]">{point.icon}</span>
                 </span>
                 <h3 className="font-sora text-base font-bold mt-1">{point.title}</h3>
                 <p className="text-sm text-[#494454] leading-relaxed">{point.text}</p>
@@ -396,7 +376,7 @@ export const LandingPage: React.FC = () => {
                 <details key={item.q} className="group rounded-2xl border border-[#e5eeff] bg-[#f8f9ff] open:bg-white">
                   <summary className="cursor-pointer list-none p-4 flex items-center justify-between gap-3 font-semibold text-sm lg:text-base rounded-2xl">
                     {item.q}
-                    <span className="material-symbols-outlined text-[22px] text-[#6b38d4] shrink-0 transition-transform group-open:rotate-180">
+                    <span className="material-symbols-outlined text-[1.5rem] text-[#6b38d4] shrink-0 transition-transform group-open:rotate-180">
                       expand_more
                     </span>
                   </summary>
@@ -412,11 +392,20 @@ export const LandingPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <Logo size={24} />
           <span>© {new Date().getFullYear()} Synapse</span>
+          <button
+            type="button"
+            onClick={() => setIsTermsOpen(true)}
+            className="ml-2 font-semibold text-[#5516be] underline underline-offset-2 rounded"
+          >
+            Termo e privacidade (LGPD)
+          </button>
         </div>
         <p>
           Em crise? Ligue <a href="tel:188" className="font-semibold text-[#ba1a1a] underline">188</a> (CVV), 24 horas, gratuito.
         </p>
       </footer>
+
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
 
       <Modal
         isOpen={isLeadOpen}

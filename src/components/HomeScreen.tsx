@@ -13,6 +13,7 @@ interface HomeScreenProps {
   onOpenSOS: () => void;
   onOpenVideoRoom: () => void;
   onOpenTherapistProfile: () => void;
+  onOpenChat: () => void;
   onReschedule: () => void;
   onFindTherapist: () => void;
   onToggleDiscretion: () => void;
@@ -49,6 +50,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onOpenSOS,
   onOpenVideoRoom,
   onOpenTherapistProfile,
+  onOpenChat,
   onReschedule,
   onFindTherapist,
   onToggleDiscretion,
@@ -126,7 +128,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           className="h-11 px-3 sm:px-4 rounded-full bg-white border border-[#e5eeff] flex items-center gap-2 text-[#494454] hover:text-[#6b38d4] hover:border-[#6b38d4]/30 active:scale-95 transition-all shrink-0"
           aria-label="Ocultar a tela (modo discreto)"
         >
-          <span className="material-symbols-outlined text-[20px]">visibility_off</span>
+          <span className="material-symbols-outlined text-[1.375rem]">visibility_off</span>
           <span className="hidden sm:inline font-outfit text-sm font-medium">Modo discreto</span>
         </button>
       </section>
@@ -134,12 +136,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Resumo em números */}
       <section aria-label="Resumo" className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {stats.map((s) => (
-          <div key={s.label} className={`rounded-2xl p-4 flex flex-col gap-1 ${s.tone}`}>
+          <div key={s.label} className={`rounded-2xl p-4 flex flex-col gap-1 min-w-0 ${s.tone}`}>
             <div className="flex items-center justify-between gap-2">
               <span className="font-outfit text-xs font-semibold opacity-90">{s.label}</span>
-              <span className="material-symbols-outlined text-[18px] opacity-80">{s.icon}</span>
+              <span className="material-symbols-outlined text-[1.25rem] opacity-80">{s.icon}</span>
             </div>
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-x-1 flex-wrap">
               <span className="font-sora text-2xl lg:text-3xl font-bold text-[#0b1c30] tracking-tight tabular-nums">
                 {s.value}
               </span>
@@ -152,7 +154,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
         {/* Coluna principal */}
-        <div className="lg:col-span-2 flex flex-col gap-4 lg:gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-4 lg:gap-6 min-w-0">
           {/* Agenda de hoje */}
           <section className="card">
             <div className="flex items-center justify-between mb-3">
@@ -166,31 +168,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
             <ul className="flex flex-col gap-2">
               {weekly ? (
-                <li className="p-3 rounded-2xl border border-[#e5eeff] flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                  <span className="w-12 font-sora text-sm font-bold text-[#0051d5] tabular-nums shrink-0">
+                <li className="p-3 rounded-2xl border border-[#e5eeff] flex items-center gap-3 flex-wrap">
+                  <span className="min-w-12 font-sora text-sm font-bold text-[#0051d5] tabular-nums shrink-0">
                     {formatTime(weekly.next)}
                   </span>
                   <Avatar name={weekly.therapist.name} image={weekly.therapist.avatar} />
-                  <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex flex-col min-w-0 flex-1 basis-40">
                     <span className="font-outfit text-sm font-semibold text-[#0b1c30]">
                       Sessão com {weekly.therapist.name}
                     </span>
                     <span className="font-outfit text-xs text-[#494454] flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[13px] text-[#006947]">lock</span>
+                      <span className="material-symbols-outlined text-smd text-[#006947]">lock</span>
                       {sessionIsToday
                         ? `${weekly.plan.format === 'video' ? 'Vídeo' : 'Áudio'} criptografado · ${formatCountdown(weekly.next, now)}`
                         : `${formatDayTime(weekly.next, now)} · ${formatCountdown(weekly.next, now)}`}
                     </span>
                   </div>
-                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-[#6ffbbe]/30 text-[#005236] font-outfit text-[11px] font-semibold shrink-0">
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-[#6ffbbe]/30 text-[#005236] font-outfit text-2xs font-semibold shrink-0">
                     Confirmada
                   </span>
                   {sessionIsToday ? (
                     <button
                       onClick={onOpenVideoRoom}
-                      className="w-full sm:w-auto h-10 px-4 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0"
+                      className="grow sm:grow-0 h-10 px-4 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0"
                     >
-                      <span className="material-symbols-outlined text-[18px]">video_camera_front</span>
+                      <span className="material-symbols-outlined text-[1.25rem]">video_camera_front</span>
                       <span>Entrar</span>
                     </button>
                   ) : (
@@ -198,7 +200,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     !doneThisWeek && (
                       <button
                         onClick={onReschedule}
-                        className="w-full sm:w-auto h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
+                        className="grow sm:grow-0 h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
                       >
                         Remarcar
                       </button>
@@ -206,9 +208,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   )}
                 </li>
               ) : (
-                <li className="p-4 rounded-2xl border border-dashed border-[#6b38d4]/40 bg-[#fbf9ff] flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                <li className="p-4 rounded-2xl border border-dashed border-[#6b38d4]/40 bg-[#fbf9ff] flex items-center gap-3 flex-wrap">
                   <span className="w-10 h-10 rounded-full bg-[#e9ddff] text-[#6b38d4] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[20px]">person_search</span>
+                    <span className="material-symbols-outlined text-[1.375rem]">person_search</span>
                   </span>
                   <div className="flex flex-col min-w-0 flex-1 basis-40">
                     <span className="font-outfit text-sm font-semibold text-[#0b1c30]">
@@ -220,39 +222,47 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   </div>
                   <button
                     onClick={onFindTherapist}
-                    className="w-full sm:w-auto h-10 px-4 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
+                    className="grow sm:grow-0 h-10 px-4 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
                   >
                     Ver psicólogos
                   </button>
                 </li>
               )}
 
-              <li className="p-3 rounded-2xl border border-[#e5eeff] flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                <span className="w-12 font-outfit text-xs font-semibold text-[#7b7486] shrink-0">2 min</span>
+              <li className="p-3 rounded-2xl border border-[#e5eeff] flex items-center gap-3 flex-wrap">
+                <span className="min-w-12 font-outfit text-xs font-semibold text-[#7b7486] shrink-0">2 min</span>
                 <span className="w-10 h-10 rounded-full bg-[#dbe1ff]/70 text-[#0051d5] flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[20px]">fact_check</span>
+                  <span className="material-symbols-outlined text-[1.375rem]">fact_check</span>
                 </span>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="font-outfit text-sm font-semibold text-[#0b1c30] truncate">
+                <div className="flex flex-col min-w-0 flex-1 basis-40">
+                  <span className="font-outfit text-sm font-semibold text-[#0b1c30]">
                     Check-in diário
                   </span>
                   <span className="font-outfit text-xs text-[#494454]">
-                    {hasCheckedInToday ? 'Respostas registradas de forma anônima' : '5 perguntas rápidas sobre o seu dia'}
+                    {hasCheckedInToday ? 'Feito hoje. Você pode refazer se algo mudou.' : '5 perguntas rápidas sobre o seu dia'}
                   </span>
                 </div>
                 {hasCheckedInToday ? (
-                  <span className="px-2.5 py-1 rounded-full bg-[#6ffbbe]/30 text-[#005236] font-outfit text-[11px] font-semibold shrink-0 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">check</span>
-                    Concluído
-                  </span>
+                  <>
+                    <span className="px-2.5 py-1 rounded-full bg-[#6ffbbe]/30 text-[#005236] font-outfit text-2xs font-semibold shrink-0 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[1rem]">check</span>
+                      Concluído
+                    </span>
+                    <button
+                      onClick={onStartAssessment}
+                      className="grow sm:grow-0 h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
+                    >
+                      Refazer
+                    </button>
+                  </>
                 ) : (
                   <>
-                    <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-[#ffe9c7] text-[#7a4100] font-outfit text-[11px] font-semibold shrink-0">
+                    <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-[#ffe9c7] text-[#7a4100] font-outfit text-2xs font-semibold shrink-0">
                       Pendente
                     </span>
                     <button
                       onClick={onStartAssessment}
-                      className="w-full sm:w-auto h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
+                      className="grow sm:grow-0 h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
                     >
                       Fazer agora
                     </button>
@@ -260,23 +270,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 )}
               </li>
 
-              <li className="p-3 rounded-2xl border border-[#e5eeff] flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                <span className="w-12 font-outfit text-xs font-semibold text-[#7b7486] shrink-0">3 min</span>
+              <li className="p-3 rounded-2xl border border-[#e5eeff] flex items-center gap-3 flex-wrap">
+                <span className="min-w-12 font-outfit text-xs font-semibold text-[#7b7486] shrink-0">3 min</span>
                 <span className="w-10 h-10 rounded-full bg-[#e9ddff]/70 text-[#6b38d4] flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[20px]">air</span>
+                  <span className="material-symbols-outlined text-[1.375rem]">air</span>
                 </span>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="font-outfit text-sm font-semibold text-[#0b1c30] truncate">
+                <div className="flex flex-col min-w-0 flex-1 basis-40">
+                  <span className="font-outfit text-sm font-semibold text-[#0b1c30]">
                     Respiração 4-7-8
                   </span>
                   <span className="font-outfit text-xs text-[#494454] flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px] text-[#6b38d4]">neurology</span>
+                    <span className="material-symbols-outlined text-smd text-[#6b38d4]">neurology</span>
                     {sessionIsToday ? 'Sugestão da Synapse AI antes da sessão' : 'Sugestão da Synapse AI para hoje'}
                   </span>
                 </div>
                 <button
                   onClick={() => onOpenBreathing('478')}
-                  className="w-full sm:w-auto h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
+                  className="grow sm:grow-0 h-10 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] font-outfit text-sm font-semibold active:scale-95 transition-all shrink-0"
                 >
                   Iniciar
                 </button>
@@ -291,7 +301,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 Índice de Bem-Estar
               </h2>
               <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border ${status.chip}`}>
-                <span className="material-symbols-outlined text-[14px] fill-1">{status.icon}</span>
+                <span className="material-symbols-outlined text-[1rem] fill-1">{status.icon}</span>
                 <span className="font-outfit text-xs font-semibold">{status.label}</span>
               </div>
             </div>
@@ -319,10 +329,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="font-sora text-[28px] font-bold text-[#0b1c30] leading-none tabular-nums">
+                  <span className="font-sora text-[2rem] font-bold text-[#0b1c30] leading-none tabular-nums">
                     {currentWellnessScore}
                   </span>
-                  <span className="font-outfit text-[11px] text-[#494454] font-medium">/ 100</span>
+                  <span className="font-outfit text-2xs text-[#494454] font-medium">/ 100</span>
                 </div>
               </div>
 
@@ -330,7 +340,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 {hasCheckedInToday ? (
                   <>
                     <div className={`flex items-center gap-1 font-outfit text-sm font-bold ${status.text}`}>
-                      <span className="material-symbols-outlined text-[18px]">update</span>
+                      <span className="material-symbols-outlined text-[1.25rem]">update</span>
                       <span>Atualizado com o check-in de hoje</span>
                     </div>
                     <p className="font-outfit text-sm text-[#494454] leading-snug">{status.message}</p>
@@ -338,7 +348,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 ) : (
                   <>
                     <div className="flex items-center gap-1 text-[#006947] font-outfit text-sm font-bold">
-                      <span className="material-symbols-outlined text-[18px]">trending_up</span>
+                      <span className="material-symbols-outlined text-[1.25rem]">trending_up</span>
                       <span>+12% nesta semana</span>
                     </div>
                     <p className="font-outfit text-sm text-[#494454] leading-snug">
@@ -373,7 +383,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     >
                       <span className="text-xl" aria-hidden="true">{m.emoji}</span>
                       <span
-                        className={`font-outfit text-[11px] mt-0.5 ${
+                        className={`font-outfit text-2xs mt-0.5 ${
                           isSelected ? 'text-[#6b38d4] font-bold' : 'text-[#494454]'
                         }`}
                       >
@@ -409,7 +419,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     style={{ height: `${col.value * 0.8}%` }}
                   />
                   <span
-                    className={`font-outfit text-[11px] ${
+                    className={`font-outfit text-2xs ${
                       col.active ? 'font-bold text-[#6b38d4]' : col.upcoming ? 'text-[#7b7486]' : 'text-[#494454]'
                     }`}
                   >
@@ -422,7 +432,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
 
         {/* Coluna lateral */}
-        <div className="flex flex-col gap-4 lg:gap-6">
+        <div className="flex flex-col gap-4 lg:gap-6 min-w-0">
           {/* Ação principal */}
           <section className="rounded-3xl p-5 bg-gradient-to-br from-[#6b38d4] to-[#0051d5] text-white relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none" />
@@ -432,13 +442,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <p className="font-outfit text-sm text-white/85 mt-1 leading-snug relative">
               {hasCheckedInToday
                 ? 'Obrigado por cuidar de você. Seu índice já foi atualizado.'
-                : 'Dois minutos para entender como você está. Suas respostas são 100% anônimas.'}
+                : 'Dois minutos para entender como você está. Sua empresa não vê o seu resultado.'}
             </p>
             <button
               onClick={hasCheckedInToday ? () => onOpenBreathing('478') : onStartAssessment}
-              className="relative mt-4 w-full h-12 rounded-full bg-white text-[#5516be] font-outfit text-sm font-bold hover:bg-[#f8f9ff] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="relative mt-4 w-full min-h-12 px-3 py-2 rounded-full bg-white text-[#5516be] font-outfit text-sm font-bold leading-tight hover:bg-[#f8f9ff] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-[20px]">
+              <span className="material-symbols-outlined text-[1.375rem]">
                 {hasCheckedInToday ? 'air' : 'fact_check'}
               </span>
               <span>{hasCheckedInToday ? 'Fazer uma pausa guiada' : 'Começar check-in'}</span>
@@ -448,17 +458,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => onOpenBreathing('478')}
-              className="h-12 rounded-2xl bg-white border border-[#e5eeff] hover:border-[#6b38d4]/30 flex items-center justify-center gap-2 text-[#0b1c30] font-outfit text-sm font-semibold active:scale-95 transition-all"
+              className="min-h-12 px-2 py-1.5 rounded-2xl bg-white border border-[#e5eeff] hover:border-[#6b38d4]/30 flex items-center justify-center gap-2 text-[#0b1c30] font-outfit text-sm font-semibold leading-tight active:scale-95 transition-all"
             >
-              <span className="material-symbols-outlined text-[20px] text-[#006947]">air</span>
+              <span className="material-symbols-outlined text-[1.375rem] text-[#006947]">air</span>
               <span>Pausa guiada</span>
             </button>
 
             <button
               onClick={onOpenSOS}
-              className="h-12 rounded-2xl bg-[#ffdad6]/60 hover:bg-[#ffdad6] flex items-center justify-center gap-2 text-[#ba1a1a] font-outfit text-sm font-semibold active:scale-95 transition-all"
+              className="min-h-12 px-2 py-1.5 rounded-2xl bg-[#ffdad6]/60 hover:bg-[#ffdad6] flex items-center justify-center gap-2 text-[#ba1a1a] font-outfit text-sm font-semibold leading-tight active:scale-95 transition-all"
             >
-              <span className="material-symbols-outlined text-[20px] fill-1">shield_with_heart</span>
+              <span className="material-symbols-outlined text-[1.375rem] fill-1">shield_with_heart</span>
               <span>SOS</span>
             </button>
           </div>
@@ -466,12 +476,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {/* Psicólogo fixo */}
           {weekly ? (
             <section className="card flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="font-sora text-base font-bold text-[#0b1c30]">
                   {weekly.therapist.name.startsWith('Dra.') ? 'Sua psicóloga' : 'Seu psicólogo'}
                 </h2>
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#dbe1ff]/60 text-[#003ea8] font-outfit text-[11px] font-semibold">
-                  <span className="material-symbols-outlined text-[13px]">verified</span>
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#dbe1ff]/60 text-[#003ea8] font-outfit text-2xs font-semibold">
+                  <span className="material-symbols-outlined text-smd">verified</span>
                   Pago pela empresa
                 </span>
               </div>
@@ -485,19 +495,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   <span className="font-sora text-sm font-bold text-[#0b1c30]">{weekly.therapist.name}</span>
                   <span className="font-outfit text-xs text-[#494454] truncate">{weekly.therapist.reg}</span>
                   <span className="flex items-center gap-1 mt-0.5 font-outfit text-xs text-[#494454]">
-                    <span className="material-symbols-outlined text-[14px] fill-1 text-amber-500">star</span>
+                    <span className="material-symbols-outlined text-[1rem] fill-1 text-amber-500">star</span>
                     <strong className="text-[#0b1c30]">{weekly.therapist.rating.toFixed(1)}</strong> · {weekly.therapist.reviewCount} avaliações
                   </span>
                 </span>
-                <span className="material-symbols-outlined text-[20px] text-[#7b7486]">chevron_right</span>
+                <span className="material-symbols-outlined text-[1.375rem] text-[#7b7486]">chevron_right</span>
               </button>
 
               <div className="p-3 rounded-2xl bg-[#eff4ff] flex items-center gap-2 font-outfit text-sm text-[#0b1c30]">
-                <span className="material-symbols-outlined text-[18px] text-[#6b38d4]">event_repeat</span>
+                <span className="material-symbols-outlined text-[1.25rem] text-[#6b38d4]">event_repeat</span>
                 <span>
                   Horário fixo: <strong>{formatRecurring(weekly.plan.weekday, weekly.plan.time).toLowerCase()}</strong>
                 </span>
               </div>
+
+              <button
+                onClick={onOpenChat}
+                className="min-h-11 px-4 py-1.5 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[1.25rem]">chat</span>
+                Enviar mensagem
+              </button>
 
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -525,7 +543,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 onClick={onFindTherapist}
                 className="h-11 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-[18px]">person_search</span>
+                <span className="material-symbols-outlined text-[1.25rem]">person_search</span>
                 Escolher psicólogo
               </button>
             </section>
@@ -533,7 +551,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
           {/* Privacidade */}
           <section className="rounded-3xl p-4 bg-[#eff4ff] border border-[#dce9ff] flex items-start gap-3 lg:hidden">
-            <span className="material-symbols-outlined text-[20px] text-[#0051d5] fill-1 shrink-0">verified_user</span>
+            <span className="material-symbols-outlined text-[1.375rem] text-[#0051d5] fill-1 shrink-0">verified_user</span>
             <p className="font-outfit text-sm text-[#494454] leading-snug">
               <strong className="text-[#003ea8] font-semibold">100% anônimo para a empresa.</strong> Ninguém do RH ou da liderança vê seus dados individuais.
             </p>

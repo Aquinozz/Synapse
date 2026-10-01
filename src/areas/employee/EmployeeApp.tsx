@@ -1,5 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { scrollPageToTop } from '../../utils/scroll';
 import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router';
+import { api } from '../../api/client';
 import { Therapist } from '../../types';
 import { useSession } from '../../auth/session';
 import { AppShell, NavItem } from '../../components/AppShell';
@@ -9,13 +11,18 @@ import { TherapistsScreen } from '../../components/TherapistsScreen';
 import { WellnessHubScreen } from '../../components/WellnessHubScreen';
 import { SynapseAIScreen } from '../../components/SynapseAIScreen';
 import { BreathingModal } from '../../components/BreathingModal';
+import { ChatModal } from '../../components/ChatModal';
 import { SOSModal } from '../../components/SOSModal';
 import { VideoRoomModal } from '../../components/VideoRoomModal';
 import { ScheduleModal, ScheduleMode } from '../../components/ScheduleModal';
-import { TherapistDetailModal } from '../../components/TherapistDetailModal';
+import { TherapistProfileScreen } from '../../components/TherapistProfileScreen';
 import { NotificationsModal } from '../../components/NotificationsModal';
 import { ProfileModal } from '../../components/ProfileModal';
+import { CheckinResult, hasSkippedCheckinToday, skipCheckinToday } from './checkin';
 import { EmployeePlanProvider, useEmployeePlan } from './plan';
+
+/** Index shown until the person does a check-in */
+const DEFAULT_WELLNESS_SCORE = 84;
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/app/inicio', label: 'Início', icon: 'grid_view' },
@@ -35,8 +42,42 @@ const EmployeeAppContent: React.FC = () => {
   const { session, logout } = useSession();
   const { therapist: myTherapist } = useEmployeePlan();
 
-  const [currentWellnessScore, setCurrentWellnessScore] = useState(84);
-  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  // Today's check-in index, kept by the API; null until the person does it
+  const [checkinScore, setCheckinScore] = useState<number | null>(null);
+  const hasCheckedInToday = checkinScore !== null;
+  const currentWellnessScore = checkinScore ?? DEFAULT_WELLNESS_SCORE;
+  const userId = session?.id;
+
+  // The check-in opens by itself on the first visit of the day, unless it was done or skipped
+  useEffect(() => {
+    if (userId === undefined) return;
+    let cancelled = false;
+    api<{ today: { score: number } | null }>('GET', '/checkin')
+      .then(({ today }) => {
+        if (cancelled) return;
+        if (today) setCheckinScore(today.score);
+        else if (!hasSkippedCheckinToday(userId)) navigate('/app/check-in');
+      })
+      // Without an answer nobody is pushed into the check-in; it stays available on the home screen
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // Only when the area opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  const submitCheckin = async (score: number) => {
+    const result = await api<CheckinResult>('PUT', '/checkin', { score });
+    setCheckinScore(result.today.score);
+    return result;
+  };
+
+  // Leaving the check-in without finishing counts as skipping it for today
+  const leaveCheckin = () => {
+    if (userId !== undefined && !hasCheckedInToday) skipCheckinToday(userId);
+    goTo('/app/inicio');
+  };
   const [isDiscretionActive, setIsDiscretionActive] = useState(false);
   const [completedPractices, setCompletedPractices] = useState<string[]>([]);
 
@@ -45,14 +86,14 @@ const EmployeeAppContent: React.FC = () => {
   const [breathingTechnique, setBreathingTechnique] = useState<'478' | 'box'>('478');
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [isVideoRoomOpen, setIsVideoRoomOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [scheduling, setScheduling] = useState<{ therapist: Therapist; mode: ScheduleMode } | null>(null);
-  const [selectedTherapistProfile, setSelectedTherapistProfile] = useState<Therapist | null>(null);
 
   const goTo = (path: string) => {
     navigate(path);
-    window.scrollTo({ top: 0 });
+    scrollPageToTop();
   };
 
   const handleOpenBreathing = (technique: '478' | 'box' = '478') => {
@@ -79,7 +120,7 @@ const EmployeeAppContent: React.FC = () => {
   const shell = (
     <AppShell
       navItems={NAV_ITEMS}
-      user={{ name: session?.name ?? '' }}
+      user={{ name: session?.name ?? '', image: session?.avatar }}
       onOpenProfile={() => setIsProfileOpen(true)}
       onOpenNotifications={() => setIsNotificationsOpen(true)}
       unreadNotifications={hasCheckedInToday ? 1 : 2}
@@ -91,12 +132,12 @@ const EmployeeAppContent: React.FC = () => {
             onClick={openSOS}
             className="h-11 px-3 rounded-xl bg-[#ffdad6]/60 hover:bg-[#ffdad6] text-[#ba1a1a] font-outfit text-sm font-semibold flex items-center gap-3 transition-colors"
           >
-            <span className="material-symbols-outlined text-[22px] fill-1">shield_with_heart</span>
+            <span className="material-symbols-outlined text-[1.5rem] fill-1">shield_with_heart</span>
             <span>SOS Acolhimento</span>
           </button>
 
           <div className="p-3 rounded-xl bg-[#eff4ff] flex items-start gap-2">
-            <span className="material-symbols-outlined text-[18px] text-[#0051d5] fill-1 shrink-0">
+            <span className="material-symbols-outlined text-[1.25rem] text-[#0051d5] fill-1 shrink-0">
               verified_user
             </span>
             <p className="font-outfit text-xs text-[#494454] leading-snug">
@@ -123,7 +164,7 @@ const EmployeeAppContent: React.FC = () => {
         >
           <span className="bg-white/95 rounded-3xl p-6 shadow-2xl max-w-sm border border-white/60 flex flex-col items-center gap-2">
             <span className="w-12 h-12 rounded-full bg-[#eff4ff] text-[#6b38d4] flex items-center justify-center">
-              <span className="material-symbols-outlined text-[28px]">visibility_off</span>
+              <span className="material-symbols-outlined text-[2rem]">visibility_off</span>
             </span>
             <span className="font-sora text-base font-bold text-[#0b1c30]">Modo discreto ativo</span>
             <span className="text-sm text-[#494454]">
@@ -141,13 +182,11 @@ const EmployeeAppContent: React.FC = () => {
           path="check-in"
           element={
             <AssessmentScreen
-              onBack={() => goTo('/app/inicio')}
+              onLeave={leaveCheckin}
+              canSkip={!hasCheckedInToday}
               onOpenSOS={openSOS}
-              onFinish={(newScore) => {
-                setCurrentWellnessScore(newScore);
-                setHasCheckedInToday(true);
-                goTo('/app/inicio');
-              }}
+              onSubmit={submitCheckin}
+              onFinish={() => goTo('/app/inicio')}
             />
           }
         />
@@ -161,7 +200,8 @@ const EmployeeAppContent: React.FC = () => {
                 onOpenBreathing={handleOpenBreathing}
                 onOpenSOS={openSOS}
                 onOpenVideoRoom={() => setIsVideoRoomOpen(true)}
-                onOpenTherapistProfile={() => setSelectedTherapistProfile(myTherapist)}
+                onOpenTherapistProfile={() => myTherapist && goTo(`/app/terapeutas/${myTherapist.id}`)}
+                onOpenChat={() => setIsChatOpen(true)}
                 onReschedule={() => myTherapist && openSchedule(myTherapist, 'reschedule')}
                 onFindTherapist={() => goTo('/app/terapeutas')}
                 onToggleDiscretion={() => setIsDiscretionActive(true)}
@@ -182,14 +222,10 @@ const EmployeeAppContent: React.FC = () => {
               />
             }
           />
+          <Route path="terapeutas" element={<TherapistsScreen onSchedule={openSchedule} />} />
           <Route
-            path="terapeutas"
-            element={
-              <TherapistsScreen
-                onSchedule={openSchedule}
-                onViewProfile={(th) => setSelectedTherapistProfile(th)}
-              />
-            }
+            path="terapeutas/:id"
+            element={<TherapistProfileScreen onSchedule={openSchedule} onOpenChat={() => setIsChatOpen(true)} />}
           />
           <Route
             path="synapse-ai"
@@ -226,22 +262,22 @@ const EmployeeAppContent: React.FC = () => {
         remoteImage={myTherapist?.avatar ?? undefined}
       />
 
+      {session && (
+        <ChatModal
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          therapist={myTherapist}
+          userId={session.id}
+          userName={session.name}
+          onOpenSOS={openSOS}
+        />
+      )}
+
       <ScheduleModal
         isOpen={scheduling !== null}
         therapist={scheduling?.therapist ?? null}
         mode={scheduling?.mode ?? 'choose'}
         onClose={() => setScheduling(null)}
-      />
-
-      <TherapistDetailModal
-        isOpen={selectedTherapistProfile !== null}
-        therapist={selectedTherapistProfile}
-        isCurrent={selectedTherapistProfile !== null && selectedTherapistProfile.id === myTherapist?.id}
-        onClose={() => setSelectedTherapistProfile(null)}
-        onSchedule={(th) => {
-          setSelectedTherapistProfile(null);
-          openSchedule(th);
-        }}
       />
 
       <NotificationsModal

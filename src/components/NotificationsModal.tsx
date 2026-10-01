@@ -69,7 +69,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       id: '2',
       title: hasCheckedInToday ? 'Check-in de hoje concluído' : 'Check-in diário disponível',
       desc: hasCheckedInToday
-        ? 'Suas respostas foram registradas de forma anônima.'
+        ? 'O índice de hoje foi registrado. Sua empresa não vê o seu resultado.'
         : 'Cinco perguntas rápidas sobre o seu dia (2 min).',
       time: 'Hoje',
       icon: 'fact_check',
@@ -98,7 +98,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} label="Notificações" maxWidth="max-w-sm">
         <div className="flex items-center justify-between pb-3 border-b border-[#eff4ff]">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-[#6b38d4]">notifications</span>
+            <span className="material-symbols-outlined text-[1.375rem] text-[#6b38d4]">notifications</span>
             <h3 className="font-sora text-base font-bold text-[#0b1c30]">Notificações</h3>
           </div>
           <ModalCloseButton onClose={onClose} />
@@ -115,11 +115,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   <div
                     className={`w-7 h-7 rounded-full ${n.bg} ${n.color} flex items-center justify-center shrink-0`}
                   >
-                    <span className="material-symbols-outlined text-[16px]">{n.icon}</span>
+                    <span className="material-symbols-outlined text-[1.125rem]">{n.icon}</span>
                   </div>
                   <span className="font-sora text-xs font-bold text-[#0b1c30]">{n.title}</span>
                 </div>
-                <span className="text-[10px] text-[#494454] font-outfit">{n.time}</span>
+                <span className="text-3xs text-[#494454] font-outfit">{n.time}</span>
               </div>
               <p className="text-xs text-[#494454] font-outfit leading-snug pl-9">{n.desc}</p>
               {n.action && (

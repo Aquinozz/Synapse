@@ -2,11 +2,11 @@
 
 Plano de saúde mental para empresas:
 
-- a **empresa** paga R$ 100 por funcionário ao mês;
+- a **empresa** paga R$ 200 por funcionário ao mês;
 - o **funcionário** tem 1 sessão por semana com um psicólogo fixo;
-- o **psicólogo** paga R$ 80 ao mês para estar na plataforma e recebe um repasse por sessão.
+- o **psicólogo** não paga para estar na plataforma e recebe R$ 50 por sessão realizada.
 
-Esses valores ficam em `src/config/pricing.ts` (front) e `server/src/config.js` (API). O repasse por sessão (`sessionPayout`) ainda é provisório.
+Esses valores ficam em `src/config/pricing.ts` (front) e `server/src/config.js` (API).
 
 Front end em React 19 + Vite + Tailwind CSS v4 + React Router, ligado à API de `server/`.
 
@@ -16,8 +16,8 @@ Front end em React 19 + Vite + Tailwind CSS v4 + React Router, ligado à API de 
 | --- | --- |
 | `/` | Página pública com preços e chamadas para empresas e psicólogos |
 | `/entrar` | Login e cadastro (funcionário ou psicólogo) |
-| `/app/*` | Funcionário: início, bem-estar, terapeutas, Synapse AI e check-in |
-| `/psi/*` | Psicólogo: início, agenda, pacientes, financeiro e perfil |
+| `/app/*` | Funcionário: início, bem-estar, terapeutas (cada psicólogo tem a sua página em `/app/terapeutas/:id`), Synapse AI e check-in |
+| `/psi/*` | Psicólogo: início, agenda, pacientes (com a nota de cada sessão e o gráfico de evolução), financeiro e perfil |
 
 A área da empresa (RH) ainda não existe. `ManagementScreen.tsx` e `ExecutiveReportModal.tsx` estão no repositório, sem rota, para servir de base a ela.
 
@@ -39,7 +39,7 @@ cd server
 npm install
 cp .env.example .env   # porta e senha das contas de demonstração
 npm run dev            # http://localhost:4000/api
-npm test               # 23 testes
+npm test               # 35 testes
 ```
 
 **Banco em desenvolvimento:** sem `DATABASE_URL`, a API roda um Postgres embutido (PGlite) com os arquivos em `server/data/pg`. Não é preciso instalar banco, e os dados de demonstração são criados na primeira vez que a API sobe. O banco embutido aceita um processo por vez: não rode `npm run seed` com a API ligada.
@@ -64,14 +64,25 @@ Os testes usam um Postgres embutido em memória. Para rodá-los contra um servid
 | `POST /api/auth/register` | público | Cadastro. Funcionário informa `companyCode`; psicólogo informa `reg` (CRP) e `title` |
 | `POST /api/auth/login` | público | Devolve `token` e `user` |
 | `POST /api/auth/demo` | público | Entra em uma conta de demonstração, sem senha |
+| `POST /api/auth/terms` | logado | Registra o aceite do termo para a conta |
+| `PUT /api/auth/avatar` | funcionário | Salva a foto de perfil (imagem pequena em data URL) ou remove com `null` |
+| `PUT /api/psi/avatar` | psicólogo | Salva ou remove a foto do perfil público |
 | `POST /api/auth/logout`, `GET /api/auth/me` | logado | Encerra a sessão / dados do usuário |
-| `GET /api/psychologists`, `GET /api/psychologists/:id` | logado | Psicólogos ativos com os horários semanais livres (`?search=`) |
+| `GET /api/psychologists`, `GET /api/psychologists/:id` | logado | Psicólogos ativos com os horários semanais livres (`?search=` procura em nome, título, especialidades e abordagens) |
+| `GET /api/psychologists/:id/reviews` | logado | Avaliações do psicólogo (sem o nome do autor), média e distribuição; diz se quem consulta pode avaliar |
+| `PUT /api/psychologists/:id/review`, `DELETE ...` | funcionário | Publica, altera ou exclui a própria avaliação (1 a 5 estrelas e comentário), só do psicólogo que o atende e depois da primeira sessão |
+| `GET /api/psi/reviews` | psicólogo | Avaliações recebidas, sem o nome de quem escreveu |
+| `GET /api/checkin`, `PUT /api/checkin` | funcionário | Check-in do dia: guarda só o índice (0 a 100), um por dia; refazer substitui. Índice muito baixo avisa o psicólogo |
+| `GET /api/psi/alerts`, `POST /api/psi/alerts/:id/seen` | psicólogo | Pacientes com check-in muito baixo nos últimos 7 dias / marca como visto |
 | `GET /api/plan` | funcionário | Psicólogo e horário fixos, próxima sessão |
 | `PUT /api/plan` | funcionário | Escolhe ou troca psicólogo e horário fixo |
 | `POST /api/plan/reschedule` | funcionário | Remarca só a sessão desta semana |
 | `GET /api/psi/availability`, `PUT /api/psi/availability` | psicólogo | Horários semanais oferecidos |
 | `GET /api/psi/patients` | psicólogo | Pacientes com horário fixo |
-| `GET /api/psi/profile`, `PUT /api/psi/profile` | psicólogo | Perfil público (apresentação e especialidades) |
+| `GET /api/psi/evaluations` | psicólogo | Notas que o psicólogo deu às sessões dos seus pacientes |
+| `PUT /api/psi/patients/:id/evaluations/:data`, `DELETE ...` | psicólogo | Dá, altera ou exclui a nota (1 a 10) e o comentário de uma sessão (`AAAA-MM-DD`) |
+| `GET /api/psi/profile`, `PUT /api/psi/profile` | psicólogo | Perfil público: apresentação, especialidades, abordagens e idiomas (só opções do catálogo) |
+| `GET /api/catalog` | público | Especialidades (por grupo), abordagens, idiomas e os limites do perfil |
 | `GET /api/pricing`, `GET /api/health` | público | Preços do plano / verificação |
 
 As requisições autenticadas levam o cabeçalho `Authorization: Bearer <token>`. Erros voltam como `{ "error": { "code", "message" } }`.
@@ -84,11 +95,12 @@ Em desenvolvimento, o Vite encaminha `/api` para a porta 4000, então rode a API
 
 | Vem da API | Ainda simulado no front |
 | --- | --- |
-| Login, cadastro e sessão | Check-in diário e índice de bem-estar |
+| Login, cadastro e sessão | Perguntas do check-in (só o índice do dia vai para a API) |
 | Psicólogos e horários livres | Evolução semanal e "dias ativos" |
 | Sessão semanal (escolher, trocar, remarcar) | Sugestões da Synapse AI |
 | Perfil, agenda e pacientes do psicólogo | Anotações de pacientes (ficam no navegador) |
-| | Financeiro do psicólogo (estimativa pela agenda) |
+| Avaliações dos psicólogos (estrelas e comentários) | Financeiro do psicólogo (estimativa pela agenda) |
+| Notas das sessões e gráfico de evolução do paciente | Chat com o psicólogo (demonstração: respostas automáticas, conversa só no navegador) |
 
 ## Deploy na Vercel
 
@@ -122,6 +134,35 @@ Os arquivos ficam em `public/images/logo/`. Cada formato (`simbolo`, `nome`, `ho
 - `branco`: para fundos escuros ou com gradiente.
 
 Há também `synapse-original.png` (arte com o fundo creme), os ícones de app (`synapse-icone-*`) e os favicons. O componente `Logo` e a constante `LOGOS` (`src/constants/images.ts`) apontam para as versões usadas no app.
+
+## Termo de Aceite e Privacidade (LGPD)
+
+O texto fica em `src/legal/terms.tsx` e descreve o que o sistema faz hoje com os dados. O aceite é pedido em dois momentos e registrado pela API (versão e data, por conta):
+
+- **No cadastro:** caixa "Li e aceito" e, para funcionários, uma segunda caixa em destaque com o consentimento para dados de saúde (LGPD, art. 11, I).
+- **No primeiro acesso** de contas que ainda não aceitaram a versão atual (inclusive as de demonstração): o app só abre depois do aceite.
+
+O termo pode ser lido a qualquer momento pelo rodapé da página inicial e pelo perfil.
+
+Antes de publicar para usuários reais:
+
+- preencha `CONTROLLER` em `src/legal/terms.tsx` (razão social, CNPJ e e-mail do encarregado);
+- peça revisão jurídica do texto;
+- ao mudar o texto, mude `TERMS_VERSION` no front e em `server/src/config.js`: todos voltam a ser perguntados.
+
+## Foto de perfil
+
+Funcionários e psicólogos escolhem uma imagem no perfil (`PhotoPicker`) e a ajustam em `PhotoEditorModal` (arrastar para posicionar, zoom, e teclado). O app recorta e reduz a foto no navegador para um JPEG de 320×320 e só essa versão vai para a API, guardada na conta. A foto do funcionário aparece para ele e para o psicólogo que o atende; a empresa não a vê. A foto do psicólogo faz parte do perfil público, visto pelos funcionários no diretório.
+
+## Acessibilidade
+
+Todos os cabeçalhos têm um botão de acessibilidade que abre um modal com três ajustes, salvos no navegador:
+
+- **Tamanho das letras** (Normal, Grande, Maior): aumenta só as fontes, sem mexer em espaçamentos, para os layouts continuarem cabendo. Funciona porque os tamanhos de texto são variáveis do tema (`text-xs`, `text-sm`, `text-2xs`...); evite tamanhos fixos como `text-[11px]`, que não acompanham o ajuste. O tamanho Normal já é a escala do Tailwind um degrau acima (texto 12,5% maior, definido no `@theme` do `src/index.css`); Grande e Maior ficam cerca de 15% e 33% acima dele.
+- **Ler em voz alta:** fala a opção que recebe foco, é tocada ou acaba de ser selecionada, usando a síntese de fala do próprio navegador (`src/accessibility/speech.ts`). O conteúdo digitado em campos nunca é falado. Depende de o dispositivo ter uma voz instalada; no Linux é preciso `speech-dispatcher` com `espeak-ng`, e o modal avisa quando não há voz.
+- **Cores para daltonismo** (Protanopia, Deuteranopia, Tritanopia): corrige as cores da página inteira com filtros SVG. Com um modo ligado, o filtro fica no `<body>` e a página passa a rolar dentro do `#root`; é isso que mantém cabeçalho, navegação e modais fixos, inclusive no Firefox.
+
+O estado fica em `src/accessibility/preferences.tsx`, as matrizes de cor em `src/accessibility/colorVision.tsx` e as regras em `src/index.css`. Para rolar a página por código, use `src/utils/scroll.ts` em vez de `window.scrollTo`.
 
 ## Ícones
 
