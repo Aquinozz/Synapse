@@ -125,6 +125,49 @@ describe('demo data', () => {
   });
 });
 
+describe('demo access', () => {
+  test('enters each demo account without a password', async () => {
+    const expected = { employee: 'Marina Silva', 'new-employee': 'Rafael Nogueira', psychologist: 'Dra. Camila Rossi' };
+    for (const [account, name] of Object.entries(expected)) {
+      const { status, data } = await api('POST', '/auth/demo', { body: { account } });
+      assert.equal(status, 200);
+      assert.equal(data.user.name, name);
+      assert.equal((await api('GET', '/auth/me', { token: data.token })).status, 200);
+    }
+  });
+
+  test('rejects an unknown demo account', async () => {
+    assert.equal((await api('POST', '/auth/demo', { body: { account: 'admin' } })).status, 400);
+  });
+
+  test('creates the demo data by itself on an empty database, and can be turned off', async () => {
+    const empty = await openDatabase('memory');
+    const listen = (app) =>
+      new Promise((resolve) => {
+        const s = app.listen(0, () => resolve(s));
+      });
+    const post = async (s) => {
+      const res = await fetch(`http://127.0.0.1:${s.address().port}/api/auth/demo`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ account: 'psychologist' }),
+      });
+      return { status: res.status, data: await res.json() };
+    };
+
+    const on = await listen(createApp(empty));
+    const first = await post(on);
+    assert.equal(first.status, 200);
+    assert.equal(first.data.user.name, 'Dra. Camila Rossi');
+    on.close();
+
+    const off = await listen(createApp(empty, { demoLogin: false }));
+    assert.equal((await post(off)).status, 404);
+    off.close();
+    await empty.close();
+  });
+});
+
 describe('psychologist directory', () => {
   test('requires login', async () => {
     assert.equal((await api('GET', '/psychologists')).status, 401);

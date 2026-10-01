@@ -79,7 +79,8 @@ const EMPLOYEES = [
  * Resolves to true when it inserted anything.
  */
 export const seed = async (db, { password, companyCode }) => {
-  const passwordHash = await hashPassword(password);
+  // Hashing is slow on purpose, so it only happens when an account is actually created
+  let passwordHash = null;
 
   return db.transaction(async (q) => {
     let inserted = false;
@@ -87,6 +88,7 @@ export const seed = async (db, { password, companyCode }) => {
     const userId = async (email) => (await q.query('SELECT id FROM users WHERE email = $1', [email]))[0]?.id;
 
     const insertUser = async (role, name, email, companyId) => {
+      passwordHash ??= await hashPassword(password);
       const [{ id }] = await q.query(
         'INSERT INTO users (role, name, email, password_hash, company_id) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [role, name, email, passwordHash, companyId]
@@ -145,6 +147,13 @@ export const seed = async (db, { password, companyCode }) => {
 
     return inserted;
   });
+};
+
+/** The accounts offered as one-click demo access on the login page */
+export const DEMO_ACCOUNTS = {
+  employee: 'marina@synapse.demo',
+  'new-employee': 'rafael@synapse.demo',
+  psychologist: 'camila@synapse.demo',
 };
 
 export const SEED_ACCOUNTS = [...EMPLOYEES.map((e) => e.email), ...PSYCHOLOGISTS.map((p) => p.email)];

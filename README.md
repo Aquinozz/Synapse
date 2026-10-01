@@ -39,7 +39,7 @@ cd server
 npm install
 cp .env.example .env   # porta e senha das contas de demonstração
 npm run dev            # http://localhost:4000/api
-npm test               # 19 testes
+npm test               # 23 testes
 ```
 
 **Banco em desenvolvimento:** sem `DATABASE_URL`, a API roda um Postgres embutido (PGlite) com os arquivos em `server/data/pg`. Não é preciso instalar banco, e os dados de demonstração são criados na primeira vez que a API sobe. O banco embutido aceita um processo por vez: não rode `npm run seed` com a API ligada.
@@ -53,6 +53,8 @@ DATABASE_URL="postgres://..." npm run seed
 
 As contas de demonstração são listadas pelo `npm run seed`; a senha é a `SEED_PASSWORD` do `.env`.
 
+**Acesso de teste sem senha:** a tela de login tem três botões (funcionária, primeiro acesso e psicóloga) que entram direto nas contas de demonstração. Na primeira vez, a API cria esses dados sozinha, inclusive em produção, então não é obrigatório rodar o seed. Para remover esse acesso, defina `DEMO_LOGIN=off`.
+
 Os testes usam um Postgres embutido em memória. Para rodá-los contra um servidor de verdade, defina `TEST_DATABASE_URL` (as tabelas desse banco são esvaziadas).
 
 **Fuso horário:** as sessões são horários de parede em `America/Sao_Paulo` (variável `APP_TIME_ZONE`), mesmo que o servidor rode em UTC.
@@ -61,6 +63,7 @@ Os testes usam um Postgres embutido em memória. Para rodá-los contra um servid
 | --- | --- | --- |
 | `POST /api/auth/register` | público | Cadastro. Funcionário informa `companyCode`; psicólogo informa `reg` (CRP) e `title` |
 | `POST /api/auth/login` | público | Devolve `token` e `user` |
+| `POST /api/auth/demo` | público | Entra em uma conta de demonstração, sem senha |
 | `POST /api/auth/logout`, `GET /api/auth/me` | logado | Encerra a sessão / dados do usuário |
 | `GET /api/psychologists`, `GET /api/psychologists/:id` | logado | Psicólogos ativos com os horários semanais livres (`?search=`) |
 | `GET /api/plan` | funcionário | Psicólogo e horário fixos, próxima sessão |
@@ -94,7 +97,7 @@ O repositório já tem o necessário: `vercel.json` (build do front, rotas do Re
 1. Crie um banco Postgres (Neon) e copie a URL de conexão **com pooling** (`-pooler` no host).
 2. Importe o repositório na Vercel. Não é preciso mudar as configurações de build.
 3. Em *Settings → Environment Variables*, adicione `DATABASE_URL` com a URL do passo 1.
-4. Faça o deploy e, uma vez, crie os dados de demonstração com o comando da seção anterior.
+4. Faça o deploy. As contas de teste da tela de login funcionam sem nenhum passo extra.
 
 ## Estrutura
 

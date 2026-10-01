@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { errorMessage } from '../api/client';
-import { HOME_BY_ROLE, RegisterInput, Role, useSession } from '../auth/session';
+import { DemoAccount, HOME_BY_ROLE, RegisterInput, Role, useSession } from '../auth/session';
 import { PRICING, formatBRL } from '../config/pricing';
 import { Logo } from '../components/Logo';
 
@@ -25,6 +25,12 @@ const PANEL: Record<Role, { title: string; text: string; icon: string }> = {
   },
 };
 
+const DEMO_ACCOUNTS: { id: DemoAccount; label: string; detail: string; icon: string }[] = [
+  { id: 'employee', label: 'Funcionária', detail: 'Com sessão semanal marcada', icon: 'badge' },
+  { id: 'new-employee', label: 'Primeiro acesso', detail: 'Ainda vai escolher o psicólogo', icon: 'person_search' },
+  { id: 'psychologist', label: 'Psicóloga', detail: 'Agenda, pacientes e perfil', icon: 'clinical_notes' },
+];
+
 const FIELD_CLASS =
   'h-12 px-4 rounded-2xl bg-white border border-[#e5eeff] text-base text-[#0b1c30] placeholder:text-[#7b7486] focus:outline-none focus:border-[#6b38d4] focus:ring-2 focus:ring-[#6b38d4]/20';
 
@@ -47,7 +53,7 @@ const Field: React.FC<
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { session, ready, login, register } = useSession();
+  const { session, ready, login, register, loginDemo } = useSession();
 
   const [mode, setMode] = useState<Mode>(searchParams.get('criar') !== null ? 'register' : 'login');
   const [role, setRole] = useState<Role>(
@@ -85,6 +91,18 @@ export const LoginPage: React.FC = () => {
             : { ...base, role, reg: form.reg.trim(), title: form.title.trim() };
         user = await register(input);
       }
+      navigate(HOME_BY_ROLE[user.role], { replace: true });
+    } catch (err) {
+      setError(errorMessage(err));
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDemo = async (account: DemoAccount) => {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const user = await loginDemo(account);
       navigate(HOME_BY_ROLE[user.role], { replace: true });
     } catch (err) {
       setError(errorMessage(err));
@@ -251,6 +269,34 @@ export const LoginPage: React.FC = () => {
               {isRegister ? 'Entrar' : 'Criar conta'}
             </button>
           </p>
+
+          {/* Acesso de demonstração */}
+          {!isRegister && (
+            <div className="flex flex-col gap-2 pt-5 border-t border-[#e5eeff]">
+              <div>
+                <h2 className="font-sora text-base font-bold">Só quer conhecer?</h2>
+                <p className="text-sm text-[#494454]">Entre com uma conta de teste, sem senha.</p>
+              </div>
+              {DEMO_ACCOUNTS.map((account) => (
+                <button
+                  key={account.id}
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => handleDemo(account.id)}
+                  className="h-14 px-3 rounded-2xl bg-white border border-[#e5eeff] hover:border-[#6b38d4]/40 hover:bg-[#fbf9ff] text-left flex items-center gap-3 transition-colors disabled:opacity-60"
+                >
+                  <span className="w-9 h-9 rounded-full bg-[#e9ddff]/70 text-[#5516be] flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">{account.icon}</span>
+                  </span>
+                  <span className="flex flex-col min-w-0 flex-1">
+                    <span className="text-sm font-semibold text-[#0b1c30]">{account.label}</span>
+                    <span className="text-xs text-[#494454] truncate">{account.detail}</span>
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-[#7b7486]">arrow_forward</span>
+                </button>
+              ))}
+            </div>
+          )}
         </form>
       </div>
 

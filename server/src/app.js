@@ -1,6 +1,6 @@
 import express from 'express';
 import { createLoginLimiter, requireAuth, requireRole } from './auth.js';
-import { PRICING } from './config.js';
+import { DEMO_LOGIN_ENABLED, PRICING } from './config.js';
 import { errorHandler, notFound } from './errors.js';
 import { authRoutes } from './routes/auth.js';
 import { planRoutes } from './routes/plan.js';
@@ -11,8 +11,9 @@ import { zonedNow } from './schedule.js';
 /**
  * Builds the API on top of an open database.
  * `now` returns the wall-clock time in the app's time zone; tests inject it to pin the clock.
+ * `demoLogin` turns the one-click demo access on or off.
  */
-export const createApp = (db, { now = zonedNow } = {}) => {
+export const createApp = (db, { now = zonedNow, demoLogin = DEMO_LOGIN_ENABLED } = {}) => {
   const app = express();
   app.disable('x-powered-by');
   // Behind Vercel's proxy the client address comes in X-Forwarded-For
@@ -20,7 +21,7 @@ export const createApp = (db, { now = zonedNow } = {}) => {
   app.use(express.json({ limit: '100kb' }));
 
   const auth = requireAuth(db);
-  const deps = { db, now, requireAuth: auth, loginLimiter: createLoginLimiter(db) };
+  const deps = { db, now, demoLogin, requireAuth: auth, loginLimiter: createLoginLimiter(db) };
 
   const api = express.Router();
   api.get('/health', (req, res) => res.json({ status: 'ok' }));

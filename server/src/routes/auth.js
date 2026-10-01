@@ -6,9 +6,11 @@ import {
   verifyAgainstDummy,
   verifyPassword,
 } from '../auth.js';
-import { ROLES } from '../config.js';
+import { randomBytes } from 'node:crypto';
+import { DEMO_COMPANY_CODE, ROLES } from '../config.js';
+import { DEMO_ACCOUNTS, seed } from '../seed.js';
 import { UNIQUE_VIOLATION } from '../db.js';
-import { HttpError, badRequest, conflict } from '../errors.js';
+import { HttpError, badRequest, conflict, notFound } from '../errors.js';
 import * as v from '../validate.js';
 
 /** What the client is allowed to know about the signed-in user */
@@ -25,8 +27,34 @@ export const publicUser = async (db, userId) => {
   return user.role === 'psychologist' ? { ...base, status } : { ...base, companyName };
 };
 
-export const authRoutes = ({ db, requireAuth, loginLimiter }) => {
+export const authRoutes = ({ db, requireAuth, loginLimiter, demoLogin }) => {
   const router = Router();
+
+  // The demo data is created the first time someone asks for demo access on this instance
+  let demoReady = null;
+  const ensureDemoData = () => {
+    demoReady ??= seed(db, {
+      // Without SEED_PASSWORD the demo accounts get a random password: they can only be
+      // entered through this endpoint
+      password: process.env.SEED_PASSWORD || randomBytes(24).toString('base64url'),
+      companyCode: DEMO_COMPANY_CODE,
+    }).catch((err) => {
+      demoReady = null;
+      throw err;
+    });
+    return demoReady;
+  };
+
+  // One-click access to a demo account, with no password
+  router.post('/demo', async (req, res) => {
+    if (!demoLogin) throw notFound('Rota não encontrada.');
+    const email = DEMO_ACCOUNTS[req.body?.account];
+    if (!email) throw badRequest('Conta de demonstração inválida.');
+
+    await ensureDemoData();
+    const [user] = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    res.json({ token: await issueToken(db, user.id), user: await publicUser(db, user.id) });
+  });
 
   router.post('/register', async (req, res) => {
     const body = req.body ?? {};

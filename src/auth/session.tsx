@@ -16,6 +16,9 @@ export interface Session {
   status?: 'pending' | 'active';
 }
 
+/** Demo accounts offered on the login page */
+export type DemoAccount = 'employee' | 'new-employee' | 'psychologist';
+
 export type RegisterInput =
   | { role: 'employee'; name: string; email: string; password: string; companyCode: string }
   | { role: 'psychologist'; name: string; email: string; password: string; reg: string; title: string };
@@ -28,6 +31,8 @@ interface SessionContextValue {
   signedOut: boolean;
   login: (email: string, password: string) => Promise<Session>;
   register: (input: RegisterInput) => Promise<Session>;
+  /** Enters a demo account without a password */
+  loginDemo: (account: DemoAccount) => Promise<Session>;
   logout: () => void;
 }
 
@@ -90,6 +95,12 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     [start]
   );
 
+  const loginDemo = useCallback(
+    async (account: DemoAccount) =>
+      start(await api<{ token: string; user: Session }>('POST', '/auth/demo', { account })),
+    [start]
+  );
+
   const logout = useCallback(() => {
     // Revoke on the server in the background; the local session ends either way
     api('POST', '/auth/logout').catch(() => {});
@@ -99,7 +110,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   return (
-    <SessionContext.Provider value={{ session, ready, signedOut, login, register, logout }}>
+    <SessionContext.Provider value={{ session, ready, signedOut, login, register, loginDemo, logout }}>
       {children}
     </SessionContext.Provider>
   );

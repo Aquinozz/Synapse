@@ -1,4 +1,5 @@
 import { createApp } from './app.js';
+import { DEMO_COMPANY_CODE } from './config.js';
 import { openDatabase } from './db.js';
 import { seed } from './seed.js';
 
@@ -10,11 +11,8 @@ const db = await openDatabase(target);
 
 // The embedded database is single-process, so the demo data is created here rather than by a
 // separate command while the server is running. A real Postgres is seeded with `npm run seed`.
-if (!process.env.DATABASE_URL && process.env.SEED_PASSWORD && process.env.SEED_COMPANY_CODE) {
-  const created = await seed(db, {
-    password: process.env.SEED_PASSWORD,
-    companyCode: process.env.SEED_COMPANY_CODE.toUpperCase(),
-  });
+if (!process.env.DATABASE_URL && process.env.SEED_PASSWORD) {
+  const created = await seed(db, { password: process.env.SEED_PASSWORD, companyCode: DEMO_COMPANY_CODE });
   if (created) console.log('Dados de demonstração criados no banco local.');
 }
 

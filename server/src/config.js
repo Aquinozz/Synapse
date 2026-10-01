@@ -11,6 +11,12 @@ export const PRICING = {
 export const SESSION_FORMATS = ['video', 'audio'];
 export const ROLES = ['employee', 'psychologist'];
 
+/** Code employees of the demo company use to sign up */
+export const DEMO_COMPANY_CODE = (process.env.SEED_COMPANY_CODE || 'DEMO-2026').toUpperCase();
+
+/** One-click access to the demo accounts. Set DEMO_LOGIN=off to remove it. */
+export const DEMO_LOGIN_ENABLED = process.env.DEMO_LOGIN !== 'off';
+
 /** How long a login lasts */
 export const TOKEN_TTL_DAYS = 7;
 
