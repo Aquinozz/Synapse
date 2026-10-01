@@ -3,53 +3,66 @@ import { Avatar } from '../../components/Avatar';
 import { Modal, ModalCloseButton } from '../../components/Modal';
 import { Patient, PatientNote } from '../../data/psychologistMock';
 import { formatDayTime, formatRecurring, nextOccurrence } from '../../utils/schedule';
+import { EvolutionPanel } from './EvolutionPanel';
+import { Evaluation, evaluationsOf } from './evaluations';
 import { PatientNotes } from './notes';
 
+export type PatientTab = 'evolution' | 'notes';
+
+/** Which patient is open, on which tab and, for a reminder, which session to score */
+export interface OpenPatient {
+  patient: Patient;
+  tab: PatientTab;
+  day?: string;
+}
+
 interface PatientModalProps {
-  patient: Patient | null;
+  open: OpenPatient | null;
   notes: PatientNotes;
+  evaluations: Evaluation[];
+  /** Both reject with an ApiError */
+  onSaveEvaluation: (patientId: number, day: string, score: number, comment: string) => Promise<void>;
+  onRemoveEvaluation: (patientId: number, day: string) => Promise<void>;
   onClose: () => void;
 }
 
-export const PatientModal: React.FC<PatientModalProps> = ({ patient, notes, onClose }) => (
+export const PatientModal: React.FC<PatientModalProps> = ({ open, onClose, ...rest }) => (
   <Modal
-    isOpen={patient !== null}
+    isOpen={open !== null}
     onClose={onClose}
-    label={patient ? `Anotações de ${patient.name}` : 'Anotações'}
+    label={open ? `Paciente ${open.patient.name}` : 'Paciente'}
     maxWidth="max-w-xl"
     className="gap-4"
   >
-    {patient && <PatientContent patient={patient} notes={notes} onClose={onClose} />}
+    {open && <PatientContent open={open} onClose={onClose} {...rest} />}
   </Modal>
 );
+
+const TABS: { id: PatientTab; label: string; icon: string }[] = [
+  { id: 'evolution', label: 'Evolução', icon: 'monitoring' },
+  { id: 'notes', label: 'Anotações', icon: 'sticky_note_2' },
+];
 
 const formatNoteDate = (iso: string) =>
   new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 
-const PatientContent: React.FC<{ patient: Patient; notes: PatientNotes; onClose: () => void }> = ({
-  patient,
+const PatientContent: React.FC<Omit<PatientModalProps, 'open'> & { open: OpenPatient }> = ({
+  open,
   notes,
+  evaluations,
+  onSaveEvaluation,
+  onRemoveEvaluation,
   onClose,
 }) => {
-  const [draft, setDraft] = useState('');
-  const [pinDraft, setPinDraft] = useState(false);
-  const list = notes.notesOf(patient.id);
+  const { patient } = open;
+  const [tab, setTab] = useState<PatientTab>(open.tab);
   const now = new Date();
-
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = draft.trim();
-    if (!text) return;
-    notes.add(patient.id, text, pinDraft);
-    setDraft('');
-    setPinDraft(false);
-  };
 
   return (
     <>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Avatar name={patient.name} className="w-12 h-12 text-base" />
+          <Avatar name={patient.name} image={patient.avatar} className="w-12 h-12 text-base" />
           <div className="flex flex-col min-w-0 font-outfit">
             <h3 className="font-sora text-lg font-bold text-[#0b1c30] truncate">{patient.name}</h3>
             <span className="text-sm text-[#494454]">
@@ -63,6 +76,59 @@ const PatientContent: React.FC<{ patient: Patient; notes: PatientNotes; onClose:
         <ModalCloseButton onClose={onClose} />
       </div>
 
+      <div role="tablist" aria-label="Informações do paciente" className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl bg-[#eff4ff]">
+        {TABS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            id={`patient-tab-${option.id}`}
+            aria-selected={tab === option.id}
+            aria-controls="patient-panel"
+            onClick={() => setTab(option.id)}
+            className={`min-h-10 px-2 py-1 rounded-xl font-outfit text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+              tab === option.id ? 'bg-white text-[#5516be] shadow-sm' : 'text-[#494454] hover:text-[#0b1c30]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[1.25rem]">{option.icon}</span>
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      <div id="patient-panel" role="tabpanel" aria-labelledby={`patient-tab-${tab}`} className="flex flex-col gap-4">
+        {tab === 'evolution' ? (
+          <EvolutionPanel
+            patient={patient}
+            evaluations={evaluationsOf(evaluations, patient.id)}
+            initialDay={open.day}
+            onSave={(day, score, comment) => onSaveEvaluation(patient.id, day, score, comment)}
+            onRemove={(day) => onRemoveEvaluation(patient.id, day)}
+          />
+        ) : (
+          <NotesPanel patient={patient} notes={notes} />
+        )}
+      </div>
+    </>
+  );
+};
+
+const NotesPanel: React.FC<{ patient: Patient; notes: PatientNotes }> = ({ patient, notes }) => {
+  const [draft, setDraft] = useState('');
+  const [pinDraft, setPinDraft] = useState(false);
+  const list = notes.notesOf(patient.id);
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = draft.trim();
+    if (!text) return;
+    notes.add(patient.id, text, pinDraft);
+    setDraft('');
+    setPinDraft(false);
+  };
+
+  return (
+    <>
       {/* Nova anotação */}
       <form onSubmit={handleAdd} className="flex flex-col gap-2">
         <label htmlFor="note-draft" className="font-outfit text-sm font-semibold text-[#0b1c30]">
@@ -116,7 +182,7 @@ const PatientContent: React.FC<{ patient: Patient; notes: PatientNotes; onClose:
       </div>
 
       <p className="flex items-start gap-2 font-outfit text-xs text-[#7b7486] leading-snug">
-        <span className="material-symbols-outlined text-[16px] text-[#0051d5] shrink-0">lock</span>
+        <span className="material-symbols-outlined text-[1.125rem] text-[#0051d5] shrink-0">lock</span>
         Só você vê estas anotações. Nem o paciente nem a empresa dele têm acesso.
       </p>
     </>
@@ -153,7 +219,7 @@ const NoteItem: React.FC<{ note: PatientNote; notes: PatientNotes }> = ({ note, 
         <span>{formatNoteDate(note.createdAt)}</span>
         {note.pinned && (
           <span className="flex items-center gap-1 font-semibold text-[#7a4100]">
-            <span className="material-symbols-outlined text-[14px] fill-1">push_pin</span>
+            <span className="material-symbols-outlined text-[1rem] fill-1">push_pin</span>
             Para a próxima sessão
           </span>
         )}
@@ -211,18 +277,18 @@ const NoteItem: React.FC<{ note: PatientNote; notes: PatientNotes }> = ({ note, 
               aria-pressed={note.pinned}
               className={`${actionClass} text-[#5516be] hover:bg-white`}
             >
-              <span className="material-symbols-outlined text-[16px]">push_pin</span>
+              <span className="material-symbols-outlined text-[1.125rem]">push_pin</span>
               {note.pinned ? 'Desafixar' : 'Lembrar na próxima'}
             </button>
             <button onClick={() => setIsEditing(true)} className={`${actionClass} text-[#5516be] hover:bg-white`}>
-              <span className="material-symbols-outlined text-[16px]">edit</span>
+              <span className="material-symbols-outlined text-[1.125rem]">edit</span>
               Editar
             </button>
             <button
               onClick={() => setConfirmingDelete(true)}
               className={`${actionClass} text-[#ba1a1a] hover:bg-white`}
             >
-              <span className="material-symbols-outlined text-[16px]">delete</span>
+              <span className="material-symbols-outlined text-[1.125rem]">delete</span>
               Excluir
             </button>
           </>

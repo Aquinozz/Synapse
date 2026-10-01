@@ -6,28 +6,20 @@ import { countWeekdayBetween, occurrenceInWeek } from '../utils/schedule';
 export interface Patient {
   id: number;
   name: string;
+  /** Profile photo chosen by the patient, when there is one */
+  avatar?: string | null;
   weekday: number;
   time: string;
   format: SessionFormat;
   /** When the patient took this weekly slot */
   since: Date;
+  /** This week's session, when it was moved for the week only ("YYYY-MM-DDTHH:MM") */
+  rescheduledTo?: string | null;
 }
 
 /** Working days and hours offered in the agenda grid */
 export const AGENDA_WEEKDAYS = [1, 2, 3, 4, 5];
 export const AGENDA_TIMES = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '15:30', '16:00', '16:30', '17:00', '18:00'];
-
-/** Specialties a psychologist can list on the public profile */
-export const SPECIALTIES: { label: string; icon: string }[] = [
-  { label: 'Burnout Corporativo', icon: 'local_fire_department' },
-  { label: 'Síndrome do Impostor', icon: 'visibility_off' },
-  { label: 'TCC Baseada em Evidências', icon: 'cognition' },
-  { label: 'Ansiedade & Estresse', icon: 'self_improvement' },
-  { label: 'Insônia & Ritmo Circadiano', icon: 'bedtime' },
-  { label: 'Mindfulness', icon: 'spa' },
-  { label: 'Saúde Mental no Trabalho', icon: 'work_history' },
-  { label: 'Luto & Perdas', icon: 'favorite' },
-];
 
 export const slotKey = (weekday: number, time: string) => `${weekday}-${time}`;
 
