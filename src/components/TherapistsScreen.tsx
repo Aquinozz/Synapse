@@ -1,166 +1,235 @@
 import React, { useState } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import { Therapist } from '../types';
 import { sound } from '../utils/audio';
 import { formatRecurring } from '../utils/schedule';
 import { useEmployeePlan } from '../areas/employee/plan';
+import { MultiSelect, MultiSelectOption } from './MultiSelect';
 import { ScheduleMode } from './ScheduleModal';
 import { TherapistCard } from './TherapistCard';
 
 interface TherapistsScreenProps {
   onSchedule: (therapist: Therapist, mode?: ScheduleMode) => void;
-  onViewProfile: (therapist: Therapist) => void;
 }
 
-const mentions = (th: Therapist, pattern: RegExp) =>
-  pattern.test(th.bio) || pattern.test(th.title) || th.tags.some((t) => pattern.test(t.label));
+const normalize = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
 
-const FILTERS: { id: string; label: string; icon: string; matches: (th: Therapist) => boolean }[] = [
-  { id: 'all', label: 'Todos', icon: 'all_inclusive', matches: () => true },
-  {
-    id: 'today',
-    label: 'Disponível hoje',
-    icon: 'schedule',
-    matches: (th) => th.weeklyAvailability.some((slot) => slot.weekday === new Date().getDay()),
-  },
-  {
-    id: 'burnout',
-    label: 'Burnout & Carreira',
-    icon: 'psychology_alt',
-    matches: (th) => th.tags.some((t) => t.category === 'burnout') || mentions(th, /burnout|esgotamento|carreira/i),
-  },
-  {
-    id: 'anxiety',
-    label: 'Ansiedade & Estresse',
-    icon: 'self_improvement',
-    matches: (th) => mentions(th, /ansiedade|estresse|cortisol/i),
-  },
-  {
-    id: 'sleep',
-    label: 'Sono',
-    icon: 'bedtime',
-    matches: (th) => th.tags.some((t) => t.category === 'sleep'),
-  },
-  {
-    id: 'medical',
-    label: 'Psiquiatria',
-    icon: 'stethoscope',
-    matches: (th) => th.tags.some((t) => t.category === 'medical'),
-  },
-];
+/** The values of one field found across the directory, most common first, with how many have each */
+const optionsOf = (therapists: Therapist[], field: 'specialties' | 'approaches' | 'languages'): MultiSelectOption[] => {
+  const counts = new Map<string, number>();
+  for (const therapist of therapists) {
+    for (const value of therapist[field]) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt-BR'))
+    .map(([value, count]) => ({ value, count }));
+};
 
-export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, onViewProfile }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
+/** Within one filter any chosen option is enough; different filters must all match */
+const matchesAny = (values: string[], chosen: string[]) =>
+  chosen.length === 0 || chosen.some((value) => values.includes(value));
+
+export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule }) => {
   const { plan, therapist: myTherapist, therapists, doneThisWeek } = useEmployeePlan();
+  // The filters live in the address, so coming back from a psychologist's page finds them as they were
+  const [params, setParams] = useSearchParams();
+  // What is typed is kept here as well: the address updates a moment later, and a field tied to it drops letters
+  const [searchTerm, setSearchTermState] = useState(params.get('busca') ?? '');
+  const specialties = params.getAll('especialidade');
+  const approaches = params.getAll('abordagem');
+  const languages = params.getAll('idioma');
+  const onlyToday = params.get('hoje') === '1';
+  const [showMore, setShowMore] = useState(languages.length > 0 || onlyToday);
 
-  const term = searchTerm.trim().toLowerCase();
-  const activeFilter = FILTERS.find((f) => f.id === selectedFilter) ?? FILTERS[0];
+  const setFilter = (key: string, values: string[]) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete(key);
+        values.filter(Boolean).forEach((value) => next.append(key, value));
+        return next;
+      },
+      { replace: true }
+    );
+  const setSearchTerm = (value: string) => {
+    setSearchTermState(value);
+    setFilter('busca', [value]);
+  };
+  const setSpecialties = (values: string[]) => setFilter('especialidade', values);
+  const setApproaches = (values: string[]) => setFilter('abordagem', values);
+  const setLanguages = (values: string[]) => setFilter('idioma', values);
+  const setOnlyToday = (value: boolean) => setFilter('hoje', value ? ['1'] : []);
 
-  const filteredTherapists = therapists.filter((th) => {
-    const matchesSearch =
-      !term ||
-      th.name.toLowerCase().includes(term) ||
-      th.title.toLowerCase().includes(term) ||
-      th.bio.toLowerCase().includes(term) ||
-      th.tags.some((t) => t.label.toLowerCase().includes(term));
+  const term = normalize(searchTerm.trim());
+  const today = new Date().getDay();
 
-    return matchesSearch && activeFilter.matches(th);
-  }).sort((a, b) => Number(b.id === myTherapist?.id) - Number(a.id === myTherapist?.id));
+  const filteredTherapists = therapists
+    .filter((th) => {
+      const matchesSearch =
+        !term ||
+        [th.name, th.title, th.bio, ...th.specialties, ...th.approaches].some((text) => normalize(text).includes(term));
+      return (
+        matchesSearch &&
+        matchesAny(th.specialties, specialties) &&
+        matchesAny(th.approaches, approaches) &&
+        matchesAny(th.languages, languages) &&
+        (!onlyToday || th.weeklyAvailability.some((slot) => slot.weekday === today))
+      );
+    })
+    .sort((a, b) => Number(b.id === myTherapist?.id) - Number(a.id === myTherapist?.id));
+
+  // Every active filter as a removable chip
+  const activeFilters = [
+    ...specialties.map((value) => ({ value, remove: () => setSpecialties(specialties.filter((v) => v !== value)) })),
+    ...approaches.map((value) => ({ value, remove: () => setApproaches(approaches.filter((v) => v !== value)) })),
+    ...languages.map((value) => ({ value, remove: () => setLanguages(languages.filter((v) => v !== value)) })),
+    ...(onlyToday ? [{ value: 'Disponível hoje', remove: () => setOnlyToday(false) }] : []),
+  ];
+  const hasFilters = activeFilters.length > 0 || term !== '';
 
   const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedFilter('all');
+    setSearchTermState('');
+    setParams({}, { replace: true });
   };
 
   return (
     <div className="screen">
-      {/* Chamada principal + busca */}
-      <section className="relative overflow-hidden rounded-3xl p-5 lg:p-8 bg-gradient-to-br from-[#6b38d4] to-[#0051d5] text-white">
-        <div className="absolute -right-12 -bottom-16 w-56 h-56 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="relative flex flex-col gap-4 max-w-2xl">
-          <div className="flex flex-col gap-1">
+      {/* Chamada principal + filtros */}
+      <section className="relative rounded-3xl p-5 lg:p-8 bg-gradient-to-br from-[#6b38d4] to-[#0051d5] text-white">
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute -right-12 -bottom-16 w-56 h-56 bg-white/10 rounded-full blur-2xl" />
+        </div>
+        <div className="relative flex flex-col gap-4">
+          <div className="flex flex-col gap-1 max-w-2xl">
             <span className="font-outfit text-xs font-semibold uppercase tracking-wider text-[#dbe1ff]">
               Seu plano está ativo
             </span>
             <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight leading-tight">
-              Seu psicólogo, toda semana
+              Encontre seu psicólogo
             </h1>
             <p className="font-outfit text-sm lg:text-base text-white/85 leading-snug">
-              Seu plano cobre 1 sessão por semana, paga pela sua empresa. Escolha um profissional e um horário fixo; a empresa nunca sabe quando ou com quem você consulta.
+              Seu plano cobre 1 sessão por semana, paga pela sua empresa. Ela nunca sabe quando ou com quem você consulta.
             </p>
           </div>
 
-          <div className="relative w-full">
-            <label className="sr-only" htmlFor="search-input">
-              Buscar profissionais de saúde mental
-            </label>
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#7b7486]">
-              <span className="material-symbols-outlined text-[22px]">search</span>
-            </span>
-            <input
-              id="search-input"
-              type="text"
-              inputMode="search"
-              autoComplete="off"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por nome ou especialidade"
-              className="w-full h-13 pl-12 pr-12 bg-white text-[#0b1c30] placeholder:text-[#7b7486] text-sm lg:text-base font-outfit rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-white/40 transition-shadow"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <MultiSelect
+              label="Especialidades"
+              placeholder="Ansiedade, Burnout..."
+              options={optionsOf(therapists, 'specialties')}
+              selected={specialties}
+              onChange={setSpecialties}
             />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                aria-label="Limpar busca"
-                className="absolute inset-y-0 right-1.5 my-auto w-10 h-10 rounded-full flex items-center justify-center text-[#494454] hover:bg-[#eff4ff]"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
+            <MultiSelect
+              label="Abordagens"
+              placeholder="TCC, Psicanálise..."
+              options={optionsOf(therapists, 'approaches')}
+              selected={approaches}
+              onChange={setApproaches}
+            />
+
+            {showMore && (
+              <>
+                <MultiSelect
+                  label="Idiomas"
+                  placeholder="Português, Libras..."
+                  options={optionsOf(therapists, 'languages')}
+                  selected={languages}
+                  onChange={setLanguages}
+                />
+                <div className="flex flex-col gap-1.5">
+                  <span className="font-outfit text-xs font-semibold uppercase tracking-wider text-[#dbe1ff]">
+                    Disponibilidade
+                  </span>
+                  <label className="h-13 px-4 rounded-2xl bg-white flex items-center gap-3 cursor-pointer shadow-sm has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-white/40">
+                    <input
+                      type="checkbox"
+                      checked={onlyToday}
+                      onChange={(e) => {
+                        setOnlyToday(e.target.checked);
+                        sound.playChime('click');
+                      }}
+                      className="w-5 h-5 shrink-0 accent-[#6b38d4]"
+                    />
+                    <span className="font-outfit text-sm lg:text-base text-[#0b1c30]">Tem horário livre hoje</span>
+                  </label>
+                </div>
+              </>
             )}
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <label className="sr-only" htmlFor="search-input">
+                Buscar por nome
+              </label>
+              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#7b7486]">
+                <span className="material-symbols-outlined text-[1.5rem]">search</span>
+              </span>
+              <input
+                id="search-input"
+                type="text"
+                inputMode="search"
+                autoComplete="off"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nome"
+                className="w-full h-13 pl-12 pr-12 bg-white text-[#0b1c30] placeholder:text-[#7b7486] text-sm lg:text-base font-outfit rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-white/40 transition-shadow"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Limpar busca"
+                  className="absolute inset-y-0 right-1.5 my-auto w-10 h-10 rounded-full flex items-center justify-center text-[#494454] hover:bg-[#eff4ff]"
+                >
+                  <span className="material-symbols-outlined text-[1.25rem]">close</span>
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMore(!showMore)}
+              aria-expanded={showMore}
+              className="h-13 px-5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-outfit text-sm font-semibold flex items-center justify-center gap-2 transition-colors shrink-0"
+            >
+              <span className="material-symbols-outlined text-[1.375rem]">tune</span>
+              {showMore ? 'Menos filtros' : 'Mais filtros'}
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Filtros rápidos */}
-      <div
-        role="group"
-        aria-label="Filtrar por especialidade"
-        className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap py-1"
-      >
-        {FILTERS.map((filter) => {
-          const isActive = selectedFilter === filter.id;
-          const count = therapists.filter(filter.matches).length;
-          return (
+      {/* Filtros ativos */}
+      {activeFilters.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap" aria-label="Filtros ativos">
+          {activeFilters.map((filter) => (
             <button
-              key={filter.id}
-              aria-pressed={isActive}
-              onClick={() => {
-                setSelectedFilter(filter.id);
-                sound.playChime('click');
-              }}
-              className={`shrink-0 h-11 px-4 rounded-full font-outfit text-sm font-semibold flex items-center gap-1.5 active:scale-95 transition-all border ${
-                isActive
-                  ? 'bg-[#6b38d4] text-white border-[#6b38d4]'
-                  : 'bg-white text-[#494454] hover:text-[#0b1c30] border-[#e5eeff] hover:border-[#6b38d4]/30'
-              }`}
+              key={filter.value}
+              onClick={filter.remove}
+              aria-label={`Remover filtro ${filter.value}`}
+              className="h-10 pl-4 pr-2.5 rounded-full bg-[#e9ddff]/70 hover:bg-[#e9ddff] text-[#5516be] font-outfit text-sm font-semibold flex items-center gap-1 transition-colors"
             >
-              <span className={`material-symbols-outlined text-[18px] ${isActive ? '' : 'text-[#6b38d4]'}`}>
-                {filter.icon}
-              </span>
-              <span>{filter.label}</span>
-              <span className={`text-xs font-medium ${isActive ? 'text-white/80' : 'text-[#7b7486]'}`}>
-                {count}
-              </span>
+              {filter.value}
+              <span className="material-symbols-outlined text-[1.25rem]">close</span>
             </button>
-          );
-        })}
-      </div>
+          ))}
+          <button
+            onClick={clearFilters}
+            className="h-10 px-3 rounded-full text-[#494454] hover:bg-[#eff4ff] font-outfit text-sm font-medium underline underline-offset-2 transition-colors"
+          >
+            Limpar tudo
+          </button>
+        </div>
+      )}
 
       {/* Lista de profissionais */}
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="font-sora text-base lg:text-lg text-[#0b1c30] font-bold">
-            Psicólogos do seu plano
-          </h2>
+          <h2 className="font-sora text-base lg:text-lg text-[#0b1c30] font-bold">Psicólogos do seu plano</h2>
           <span className="font-outfit text-sm text-[#494454] shrink-0" aria-live="polite">
             {filteredTherapists.length}{' '}
             {filteredTherapists.length === 1 ? 'profissional' : 'profissionais'}
@@ -176,6 +245,8 @@ export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, 
                 therapist={therapist}
                 isCurrent={isCurrent}
                 currentLabel={isCurrent && plan ? formatRecurring(plan.weekday, plan.time) : undefined}
+                highlighted={specialties}
+                profileHref={`/app/terapeutas/${therapist.id}`}
                 actions={
                   isCurrent ? (
                     <>
@@ -185,7 +256,7 @@ export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, 
                         onClick={() => onSchedule(therapist, 'reschedule')}
                         className="flex-1 h-12 px-4 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold whitespace-nowrap flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:bg-[#cbc3d7] disabled:active:scale-100"
                       >
-                        <span className="material-symbols-outlined text-[20px]">
+                        <span className="material-symbols-outlined text-[1.375rem]">
                           {doneThisWeek ? 'check' : 'event_repeat'}
                         </span>
                         <span>{doneThisWeek ? 'Semana realizada' : 'Remarcar a semana'}</span>
@@ -197,6 +268,13 @@ export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, 
                       >
                         Mudar horário fixo
                       </button>
+                      <Link
+                        to={`/app/terapeutas/${therapist.id}`}
+                        aria-label={`Ver perfil de ${therapist.name}`}
+                        className="basis-full h-12 px-4 rounded-full border border-[#dce9ff] hover:bg-[#eff4ff] text-[#5516be] font-outfit text-sm font-semibold flex items-center justify-center active:scale-[0.98] transition-all"
+                      >
+                        Ver perfil
+                      </Link>
                     </>
                   ) : (
                     <>
@@ -205,17 +283,16 @@ export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, 
                         onClick={() => onSchedule(therapist, 'choose')}
                         className="flex-1 h-12 px-4 rounded-full bg-[#6b38d4] hover:bg-[#8455ef] text-white font-outfit text-sm font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                       >
-                        <span className="material-symbols-outlined text-[20px]">calendar_add_on</span>
+                        <span className="material-symbols-outlined text-[1.375rem]">calendar_add_on</span>
                         <span>Escolher</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onViewProfile(therapist)}
+                      <Link
+                        to={`/app/terapeutas/${therapist.id}`}
                         aria-label={`Ver perfil de ${therapist.name}`}
                         className="h-12 px-4 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#0b1c30] font-outfit text-sm font-medium flex items-center justify-center active:scale-[0.98] transition-all shrink-0"
                       >
                         Ver perfil
-                      </button>
+                      </Link>
                     </>
                   )
                 }
@@ -226,19 +303,19 @@ export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, 
 
         {filteredTherapists.length === 0 && (
           <div className="card !p-8 text-center flex flex-col items-center gap-2">
-            <span className="material-symbols-outlined text-[36px] text-[#7b7486]">search_off</span>
-            <h3 className="font-sora text-base font-bold text-[#0b1c30]">
-              Nenhum especialista encontrado
-            </h3>
+            <span className="material-symbols-outlined text-[2.5rem] text-[#7b7486]">search_off</span>
+            <h3 className="font-sora text-base font-bold text-[#0b1c30]">Nenhum psicólogo encontrado</h3>
             <p className="text-sm text-[#494454] font-outfit">
-              Tente outro termo ou remova os filtros.
+              {hasFilters ? 'Tente outro termo ou remova algum filtro.' : 'Ainda não há profissionais disponíveis no seu plano.'}
             </p>
-            <button
-              onClick={clearFilters}
-              className="mt-2 h-11 px-5 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] text-sm font-outfit font-semibold transition-colors"
-            >
-              Limpar filtros
-            </button>
+            {hasFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-2 h-11 px-5 rounded-full bg-[#eff4ff] hover:bg-[#dce9ff] text-[#5516be] text-sm font-outfit font-semibold transition-colors"
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
         )}
       </section>
@@ -246,23 +323,13 @@ export const TherapistsScreen: React.FC<TherapistsScreenProps> = ({ onSchedule, 
       {/* Garantia de sigilo */}
       <aside className="bg-[#eff4ff] rounded-3xl p-5 flex flex-col gap-2 border border-[#dce9ff]">
         <div className="flex items-center gap-2 text-[#0b1c30] font-semibold font-outfit text-sm">
-          <span className="material-symbols-outlined text-[20px] text-[#6b38d4]">lock</span>
+          <span className="material-symbols-outlined text-[1.375rem] text-[#6b38d4]">lock</span>
           <span>Privacidade e sigilo profissional</span>
         </div>
         <p className="font-outfit text-sm text-[#494454] leading-relaxed max-w-3xl">
-          As sessões acontecem por teleconsulta criptografada de ponta a ponta, com prontuário sob sigilo ético do Conselho Federal de Psicologia (CFP).{' '}
+          Os psicólogos seguem o sigilo previsto no Código de Ética do Conselho Federal de Psicologia (CFP).{' '}
           <strong>Sua empresa nunca saberá quando ou com quem você consulta.</strong>
         </p>
-        <div className="flex items-center gap-4 pt-1 text-[#494454] font-outfit text-xs flex-wrap">
-          <span className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[15px] text-[#006947]">check_circle</span>
-            Profissionais com CRP/CRM verificado
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[15px] text-[#006947]">check_circle</span>
-            ISO 27001 para dados de saúde
-          </span>
-        </div>
       </aside>
     </div>
   );

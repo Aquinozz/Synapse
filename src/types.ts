@@ -9,7 +9,12 @@ export interface Therapist {
   reviewCount: number;
   badge?: string | null;
   bio: string;
-  tags: { label: string; icon: string; category?: 'burnout' | 'tcc' | 'sleep' | 'medical' }[];
+  /** What the professional works with, from the catalog served by the API */
+  specialties: string[];
+  /** Therapeutic approaches */
+  approaches: string[];
+  /** Languages a session can be held in */
+  languages: string[];
   /** Recurring weekly slots the therapist offers. weekday follows Date.getDay() (0 = domingo) */
   weeklyAvailability: { weekday: number; times: string[] }[];
   /** Psychologists only see this on their own profile: 'pending' until the registration is checked */
@@ -68,4 +73,12 @@ export interface WeeklyPlan {
   format: SessionFormat;
   /** Local date-time (YYYY-MM-DDTHH:MM) of a session moved for a single week */
   rescheduledTo?: string;
+}
+
+/** Options a psychologist can list on the profile (GET /api/catalog) */
+export interface ProfileCatalog {
+  specialtyGroups: { name: string; items: string[] }[];
+  approaches: string[];
+  languages: string[];
+  limits: { specialties: number; approaches: number; languages: number };
 }
