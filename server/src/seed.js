@@ -87,6 +87,35 @@ const EMPLOYEES = [
     ],
   },
   { email: 'rafael@synapse.demo', name: 'Rafael Nogueira', plan: null },
+  // Patients that only exist to fill the psychologist's demo: nobody signs in as them, so their
+  // slot and history stay as created here.
+  {
+    email: 'aline@synapse.demo',
+    name: 'Aline Souza',
+    plan: { psychologist: 'camila@synapse.demo', weekday: 1, time: '14:00', format: 'video' },
+    evaluations: [
+      { score: 3, comment: 'Primeira sessão. Crises de ansiedade antes de reuniões e sono muito irregular.' },
+      { score: 4, comment: 'Identificamos os gatilhos: apresentações e cobranças de última hora.' },
+      { score: 4, comment: '' },
+      { score: 5, comment: 'Começou a usar a respiração guiada antes das reuniões.' },
+      { score: 6, comment: 'Uma semana sem crises. Dormindo melhor.' },
+      { score: 6, comment: '' },
+      { score: 7, comment: 'Apresentou um projeto para a diretoria e se sentiu no controle.' },
+      { score: 8, comment: 'Evolução consistente. Combinamos manter a rotina de sono.' },
+    ],
+  },
+  {
+    email: 'diego@synapse.demo',
+    name: 'Diego Martins',
+    plan: { psychologist: 'camila@synapse.demo', weekday: 5, time: '11:00', format: 'audio' },
+    evaluations: [
+      { score: 6, comment: 'Chegou por indicação do RH, após mudança de equipe.' },
+      { score: 5, comment: 'Semana difícil: conflito com o novo gestor.' },
+      { score: 6, comment: '' },
+      { score: 4, comment: 'Voltou a levar trabalho para casa e a dormir tarde.' },
+      { score: 5, comment: 'Retomou os combinados de horário. Ainda oscilando.' },
+    ],
+  },
 ];
 
 /**
@@ -160,12 +189,7 @@ export const seed = async (db, { password, companyCode, now = zonedNow() }) => {
       let id = await userId(e.email);
       if (!id) {
         id = await insertUser('employee', e.name, e.email, company.id);
-        if (e.plan) {
-          await q.query(
-            'INSERT INTO weekly_plans (employee_id, psychologist_id, weekday, time, format) VALUES ($1, $2, $3, $4, $5)',
-            [id, await userId(e.plan.psychologist), e.plan.weekday, e.plan.time, e.plan.format]
-          );
-        }
+        if (e.plan) await takeSlot(q, id, await userId(e.plan.psychologist), e.plan);
       }
       if (e.plan && e.evaluations && (await seedEvaluations(q, id, e, await userId(e.plan.psychologist), now))) {
         inserted = true;
@@ -174,6 +198,27 @@ export const seed = async (db, { password, companyCode, now = zonedNow() }) => {
 
     return inserted;
   });
+};
+
+/**
+ * Gives the demo employee the weekly slot of the list. On a database already in use the slot may
+ * have been closed by the psychologist or taken by someone: it is opened again when missing and
+ * left alone when taken, so seeding never fails because of what people did with the demo.
+ */
+const takeSlot = async (q, employeeId, psychologistId, { weekday, time, format }) => {
+  const [taken] = await q.query(
+    'SELECT 1 FROM weekly_plans WHERE psychologist_id = $1 AND weekday = $2 AND time = $3',
+    [psychologistId, weekday, time]
+  );
+  if (taken) return;
+  await q.query(
+    'INSERT INTO availability (psychologist_id, weekday, time) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+    [psychologistId, weekday, time]
+  );
+  await q.query(
+    'INSERT INTO weekly_plans (employee_id, psychologist_id, weekday, time, format) VALUES ($1, $2, $3, $4, $5)',
+    [employeeId, psychologistId, weekday, time, format]
+  );
 };
 
 /**

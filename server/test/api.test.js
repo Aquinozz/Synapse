@@ -475,8 +475,10 @@ describe('psychologist area', () => {
     assert.deepEqual(
       data.patients.map((p) => [p.name, p.weekday, p.time]),
       [
+        ['Aline Souza', 1, '14:00'],
         ['Marina Silva', 3, '16:30'],
         ['Bruno Dias', 4, '10:00'],
+        ['Diego Martins', 5, '11:00'],
       ]
     );
   });
