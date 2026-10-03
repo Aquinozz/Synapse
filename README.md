@@ -154,7 +154,7 @@ Antes de publicar para usuários reais:
 
 Funcionários e psicólogos escolhem uma imagem no perfil (`PhotoPicker`) e a ajustam em `PhotoEditorModal` (arrastar para posicionar, zoom, e teclado). O app recorta e reduz a foto no navegador para um JPEG de 320×320 e só essa versão vai para a API, guardada na conta. A foto do funcionário aparece para ele e para o psicólogo que o atende; a empresa não a vê. A foto do psicólogo faz parte do perfil público, visto pelos funcionários no diretório.
 
-## Acessibilidade
+## Acessibilidade 
 
 Todos os cabeçalhos têm um botão de acessibilidade que abre um modal com três ajustes, salvos no navegador:
 
