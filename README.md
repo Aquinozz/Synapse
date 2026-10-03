@@ -1,5 +1,7 @@
 # Synapse
 
+> 🏆 Projeto desenvolvido para o **Power Tech Hackathon 2026 – SENAI CIMATEC**, onde foi escolhido como a **melhor solução industrial**. Ele atende a uma necessidade do **SENAI SP**: tornar o acesso à saúde mental mais simples e acessível no ambiente corporativo.
+
 Plano de saúde mental para empresas:
 
 - a **empresa** paga R$ 200 por funcionário ao mês;
